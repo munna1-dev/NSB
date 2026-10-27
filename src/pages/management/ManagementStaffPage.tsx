@@ -8,10 +8,12 @@ import {
   ShieldCheck,
   UserCog,
   Users,
+  UserPlus,
   XCircle,
 } from 'lucide-react'
 import {
   assignManagementPermission,
+  createManagementStaff,
   assignManagementRole,
   getManagementPermissions,
   getManagementStaffApplications,
@@ -19,6 +21,7 @@ import {
   getManagementStaffRoles,
   reviewManagementStaffApplication,
   updateManagementStaffStatus,
+  updateManagementStaffProfile,
   type ManagementPermission,
   type ManagementStaffApplication,
   type ManagementStaffMember,
@@ -73,6 +76,33 @@ export default function ManagementStaffPage() {
   const [lifecycleAction, setLifecycleAction] =
     useState<LifecycleAction>('activate')
   const [lifecycleReason, setLifecycleReason] = useState('')
+  const [profileStaffId, setProfileStaffId] = useState('')
+  const [profileFirstName, setProfileFirstName] = useState('')
+  const [profileLastName, setProfileLastName] = useState('')
+  const [profilePhone, setProfilePhone] = useState('')
+  const [profileEmployeeNumber, setProfileEmployeeNumber] = useState('')
+  const [profileDepartment, setProfileDepartment] = useState('')
+
+  const [showCreateStaff, setShowCreateStaff] = useState(false)
+  const [newFirstName, setNewFirstName] = useState('')
+  const [newLastName, setNewLastName] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [newPhone, setNewPhone] = useState('')
+  const [newEmployeeNumber, setNewEmployeeNumber] = useState('')
+  const [newDepartment, setNewDepartment] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [newRoleKey, setNewRoleKey] = useState('')
+
+
+  const selectProfileStaff = (staffId: string) => {
+    setProfileStaffId(staffId)
+    const member = staff.find((item) => item.id === staffId)
+    setProfileFirstName(member?.first_name ?? '')
+    setProfileLastName(member?.last_name ?? '')
+    setProfilePhone(member?.phone ?? '')
+    setProfileEmployeeNumber(member?.employee_number ?? '')
+    setProfileDepartment(member?.department ?? '')
+  }
 
   const pendingApplications = useMemo(
     () => applications.filter((application) => application.status === 'pending'),
@@ -215,6 +245,44 @@ export default function ManagementStaffPage() {
     })
   }
 
+  const createStaffAccount = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!newFirstName.trim() || !newLastName.trim() ||
+        !newEmail.trim() || !newPassword || !newRoleKey) {
+      setError('Complete all required fields and choose a role.')
+      return
+    }
+    if (newPassword.length < 12) {
+      setError('Use an initial password of at least 12 characters.')
+      return
+    }
+    if (!newEmail.trim().toLowerCase().endsWith('@northstarbank.site')) {
+      setError('Staff email must use @northstarbank.site.')
+      return
+    }
+    await runAction('create-staff', async () => {
+      await createManagementStaff({
+        first_name: newFirstName.trim(),
+        last_name: newLastName.trim(),
+        email: newEmail.trim().toLowerCase(),
+        phone: newPhone.trim(),
+        employee_number: newEmployeeNumber.trim(),
+        department: newDepartment.trim(),
+        password: newPassword,
+        roleKey: newRoleKey,
+      })
+      setNewFirstName('')
+      setNewLastName('')
+      setNewEmail('')
+      setNewPhone('')
+      setNewEmployeeNumber('')
+      setNewDepartment('')
+      setNewPassword('')
+      setShowCreateStaff(false)
+      setMessage('Staff account created successfully.')
+    })
+  }
+
   const applyRole = async () => {
     if (!roleStaffId || !roleKey) {
       setError('Select a staff member and a role.')
@@ -240,6 +308,29 @@ export default function ManagementStaffPage() {
         permissionEffect,
       )
       setPermissionStaffId('')
+    })
+  }
+
+  const applyProfile = async () => {
+    if (!profileStaffId) {
+      setError('Select a staff member to edit.')
+      return
+    }
+    if (!profileFirstName.trim() || !profileLastName.trim()) {
+      setError('First name and last name are required.')
+      return
+    }
+
+    await runAction('edit-profile', async () => {
+      await updateManagementStaffProfile(profileStaffId, {
+        first_name: profileFirstName.trim(),
+        last_name: profileLastName.trim(),
+        phone: profilePhone.trim(),
+        employee_number: profileEmployeeNumber.trim(),
+        department: profileDepartment.trim(),
+      })
+      setMessage('Staff profile updated successfully.')
+      await loadData()
     })
   }
 
@@ -347,9 +438,28 @@ export default function ManagementStaffPage() {
             )}
           </button>
           <button
-            className={tab === 'staff' ? 'is-active' : ''}
+            className={tab === 'staff' && showCreateStaff ? 'is-active' : ''}
             type="button"
-            onClick={() => setTab('staff')}
+            onClick={() => {
+              setTab('staff')
+              setError('')
+              setShowCreateStaff(true)
+              setNewRoleKey(
+                roles.find((role) =>
+                  role.is_active && role.role_key !== 'super_manager'
+                )?.role_key ?? '',
+              )
+            }}
+          >
+            Create Staff
+          </button>
+          <button
+            className={tab === 'staff' && !showCreateStaff ? 'is-active' : ''}
+            type="button"
+            onClick={() => {
+              setTab('staff')
+              setShowCreateStaff(false)
+            }}
           >
             Staff Directory
           </button>
@@ -442,6 +552,96 @@ export default function ManagementStaffPage() {
           </div>
         ) : tab === 'staff' ? (
           <div className="management-staff__directory">
+            <section className="management-control-card management-staff__create">
+              <div className="management-control-card__heading">
+                <UserPlus size={19} />
+                <div>
+                  <h2>Create Staff</h2>
+                  <p>Create a staff login and assign a permitted role.</p>
+                </div>
+              </div>
+              {!showCreateStaff ? (
+                <button
+                  className="management-button management-button--primary"
+                  type="button"
+                  onClick={() => {
+                    setError('')
+                    setShowCreateStaff(true)
+                    setNewRoleKey(roles.find((role) =>
+                      role.is_active && role.role_key !== 'super_manager'
+                    )?.role_key ?? '')
+                  }}
+                >
+                  <UserPlus size={16} />
+                  Create Staff
+                </button>
+              ) : (
+                <form className="management-staff__create-form" onSubmit={createStaffAccount}>
+                  <label>
+                    <span>First name *</span>
+                    <input required maxLength={100} autoComplete="given-name"
+                      value={newFirstName} onChange={e => setNewFirstName(e.target.value)} />
+                  </label>
+                  <label>
+                    <span>Last name *</span>
+                    <input required maxLength={100} autoComplete="family-name"
+                      value={newLastName} onChange={e => setNewLastName(e.target.value)} />
+                  </label>
+                  <label>
+                    <span>Staff email *</span>
+                    <input required type="email" maxLength={254} autoComplete="email"
+                      placeholder="name@northstarbank.site"
+                      value={newEmail} onChange={e => setNewEmail(e.target.value)} />
+                  </label>
+                  <label>
+                    <span>Phone</span>
+                    <input type="tel" maxLength={40} autoComplete="tel"
+                      value={newPhone} onChange={e => setNewPhone(e.target.value)} />
+                  </label>
+                  <label>
+                    <span>Employee number</span>
+                    <input maxLength={80} value={newEmployeeNumber}
+                      onChange={e => setNewEmployeeNumber(e.target.value)} />
+                  </label>
+                  <label>
+                    <span>Department</span>
+                    <input maxLength={120} value={newDepartment}
+                      onChange={e => setNewDepartment(e.target.value)} />
+                  </label>
+                  <label>
+                    <span>Management role *</span>
+                    <select required value={newRoleKey} onChange={e => setNewRoleKey(e.target.value)}>
+                      <option value="">Select a role</option>
+                      {roles.filter(role => role.is_active && role.role_key !== 'super_manager').map(role => (
+                        <option key={role.id} value={role.role_key}>{role.role_name}</option>
+                      ))}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Initial password * (12+ characters)</span>
+                    <input required type="password" minLength={12} maxLength={128}
+                      autoComplete="new-password" value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)} />
+                  </label>
+                  <p className="management-staff__create-note">
+                    The password is stored as a bcrypt hash. Share the initial password securely with the staff member.
+                    Staff IDs are generated automatically.
+                  </p>
+                  <div className="management-actions">
+                    <button className="management-button management-button--primary"
+                      type="submit" disabled={busyKey === 'create-staff' || !newRoleKey}>
+                      <UserPlus size={16} />
+                      {busyKey === 'create-staff' ? 'Creating…' : 'Create Staff'}
+                    </button>
+                    <button className="management-button management-button--secondary"
+                      type="button" disabled={busyKey === 'create-staff'}
+                      onClick={() => setShowCreateStaff(false)}>
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              )}
+            </section>
             <div className="management-table-wrap">
               <table className="management-table">
                 <thead>
@@ -503,6 +703,62 @@ export default function ManagementStaffPage() {
             </div>
 
             <div className="management-control-grid">
+              <section className="management-control-card">
+                <div className="management-control-card__heading">
+                  <UserCog size={19} />
+                  <div>
+                    <h2>Edit staff profile</h2>
+                    <p>Update contact and workforce details. Email and access rights are not changed here.</p>
+                  </div>
+                </div>
+
+                <label>
+                  Staff member
+                  <select value={profileStaffId} onChange={(event) => selectProfileStaff(event.target.value)}>
+                    <option value="">Select staff member</option>
+                    {staff.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.first_name} {member.last_name} — {member.email}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <label>
+                  First name
+                  <input value={profileFirstName} onChange={(event) => setProfileFirstName(event.target.value)} maxLength={80} required />
+                </label>
+
+                <label>
+                  Last name
+                  <input value={profileLastName} onChange={(event) => setProfileLastName(event.target.value)} maxLength={80} required />
+                </label>
+
+                <label>
+                  Phone
+                  <input value={profilePhone} onChange={(event) => setProfilePhone(event.target.value)} maxLength={40} />
+                </label>
+
+                <label>
+                  Employee number
+                  <input value={profileEmployeeNumber} onChange={(event) => setProfileEmployeeNumber(event.target.value)} maxLength={64} />
+                </label>
+
+                <label>
+                  Department
+                  <input value={profileDepartment} onChange={(event) => setProfileDepartment(event.target.value)} maxLength={120} />
+                </label>
+
+                <button
+                  className="management-button management-button--primary"
+                  type="button"
+                  disabled={busyKey === 'edit-profile' || !profileStaffId}
+                  onClick={() => void applyProfile()}
+                >
+                  Save staff profile
+                </button>
+              </section>
+
               <section className="management-control-card">
                 <div className="management-control-card__heading">
                   <UserCog size={19} />
