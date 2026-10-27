@@ -699,3 +699,9 @@
     font-size: 0.82rem;
   }
 }
+
+/* Keep Create Staff focused on account creation only. */
+.management-staff__directory.is-create-only > .management-table-wrap,
+.management-staff__directory.is-create-only > .management-control-grid {
+  display: none;
+}

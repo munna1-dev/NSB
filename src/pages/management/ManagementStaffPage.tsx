@@ -551,7 +551,7 @@ export default function ManagementStaffPage() {
             </table>
           </div>
         ) : tab === 'staff' ? (
-          <div className="management-staff__directory">
+          <div className={`management-staff__directory ${showCreateStaff ? 'is-create-only' : ''}`}>
             <section className="management-control-card management-staff__create">
               <div className="management-control-card__heading">
                 <UserPlus size={19} />
