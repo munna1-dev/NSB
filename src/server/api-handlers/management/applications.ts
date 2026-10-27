@@ -19,9 +19,16 @@ export default async function handler(
   try {
     const requestedStatus = String(req.body?.status ?? '').trim()
 
+    const supportedActions = new Set([
+      'under_review',
+      'approved',
+      'rejected',
+      'cancelled',
+    ])
+
     if (
       req.method !== 'GET' &&
-      !['approved', 'rejected'].includes(requestedStatus)
+      (req.method !== 'PATCH' || !supportedActions.has(requestedStatus))
     ) {
       return res.status(400).json({
         ok: false,
@@ -30,7 +37,7 @@ export default async function handler(
     }
 
     const permission: ManagementPermission =
-      req.method === 'GET'
+      req.method === 'GET' || requestedStatus === 'under_review'
         ? 'applications.view'
         : requestedStatus === 'approved'
           ? 'applications.approve'
