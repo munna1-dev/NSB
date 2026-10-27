@@ -29,7 +29,7 @@ import {
 } from '../../lib/managementApi'
 import './ManagementStaffPage.css'
 
-type Tab = 'applications' | 'staff' | 'roles'
+type Tab = 'applications' | 'create' | 'staff' | 'roles'
 
 const lifecycleActions = [
   { value: 'activate', label: 'Activate' },
@@ -438,28 +438,19 @@ export default function ManagementStaffPage() {
             )}
           </button>
           <button
-            className={tab === 'staff' && showCreateStaff ? 'is-active' : ''}
+            className={tab === 'create' ? 'is-active' : ''}
             type="button"
             onClick={() => {
-              setTab('staff')
+              setTab('create')
               setError('')
-              setShowCreateStaff(true)
-              setNewRoleKey(
-                roles.find((role) =>
-                  role.is_active && role.role_key !== 'super_manager'
-                )?.role_key ?? '',
-              )
             }}
           >
-            Create Staff
+            Create Staff Console
           </button>
           <button
-            className={tab === 'staff' && !showCreateStaff ? 'is-active' : ''}
+            className={tab === 'staff' ? 'is-active' : ''}
             type="button"
-            onClick={() => {
-              setTab('staff')
-              setShowCreateStaff(false)
-            }}
+            onClick={() => setTab('staff')}
           >
             Staff Directory
           </button>
@@ -550,8 +541,8 @@ export default function ManagementStaffPage() {
               </tbody>
             </table>
           </div>
-        ) : tab === 'staff' ? (
-          <div className={`management-staff__directory ${showCreateStaff ? 'is-create-only' : ''}`}>
+        ) : tab === 'create' ? (
+          <div className="management-staff__directory is-create-only">
             <section className="management-control-card management-staff__create">
               <div className="management-control-card__heading">
                 <UserPlus size={19} />
@@ -642,6 +633,9 @@ export default function ManagementStaffPage() {
                 </form>
               )}
             </section>
+          </div>
+        ) : tab === 'staff' ? (
+          <div className="management-staff__directory">
             <div className="management-table-wrap">
               <table className="management-table">
                 <thead>
