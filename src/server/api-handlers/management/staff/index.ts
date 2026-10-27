@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
+import bcrypt from 'bcryptjs'
 import { getDb } from '../../../db/client.js'
 import { requirePermission } from '../../../auth/management.js'
 import { writeStaffAuditLog } from '../../../auth/audit.js'
@@ -183,6 +184,131 @@ export default async function handler(
         typeof request.body?.action === 'string'
           ? request.body.action.trim()
           : ''
+
+      if (action === 'create-staff') {
+        const firstName = typeof request.body?.first_name === 'string'
+          ? request.body.first_name.trim() : ''
+        const lastName = typeof request.body?.last_name === 'string'
+          ? request.body.last_name.trim() : ''
+        const email = typeof request.body?.email === 'string'
+          ? request.body.email.trim().toLowerCase() : ''
+        const phone = typeof request.body?.phone === 'string'
+          ? request.body.phone.trim() : ''
+        const employeeNumber = typeof request.body?.employee_number === 'string'
+          ? request.body.employee_number.trim() : ''
+        const department = typeof request.body?.department === 'string'
+          ? request.body.department.trim() : ''
+        const password = typeof request.body?.password === 'string'
+          ? request.body.password : ''
+        const roleKey = typeof request.body?.roleKey === 'string'
+          ? request.body.roleKey.trim() : ''
+
+        if (!firstName || !lastName || !email || !password || !roleKey) {
+          return error(response, 400, 'First name, last name, staff email, initial password, and role are required.')
+        }
+        if (firstName.length > 100 || lastName.length > 100 ||
+            email.length > 254 || phone.length > 40 ||
+            employeeNumber.length > 80 || department.length > 120) {
+          return error(response, 400, 'One or more staff fields exceed the permitted length.')
+        }
+        if (!/^[^\s@]+@northstarbank\.site$/i.test(email)) {
+          return error(response, 400, 'Staff email must use the @northstarbank.site domain.')
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+          return error(response, 400, 'Enter a valid email address.')
+        }
+        if (password.length < 12 || password.length > 128) {
+          return error(response, 400, 'The initial password must be between 12 and 128 characters.')
+        }
+        if (roleKey === 'super_manager') {
+          return error(response, 400, 'A Super Manager account cannot be created through this form.')
+        }
+
+        const client = await db.connect()
+        try {
+          await client.query('BEGIN')
+
+          const roleResult = await client.query(
+            `SELECT id, role_key, role_name, is_active
+             FROM management_roles WHERE role_key = $1 LIMIT 1`,
+            [roleKey],
+          )
+          if (roleResult.rowCount !== 1 || !roleResult.rows[0].is_active) {
+            await client.query('ROLLBACK')
+            return error(response, 400, 'Choose an active management role.')
+          }
+
+          const duplicate = await client.query(
+            `SELECT id FROM staff
+             WHERE LOWER(email) = LOWER($1)
+                OR ($2 <> '' AND employee_number = $2)
+             LIMIT 1`,
+            [email, employeeNumber],
+          )
+          if (duplicate.rowCount) {
+            await client.query('ROLLBACK')
+            return error(response, 409, 'That staff email or employee number is already in use.')
+          }
+
+          const passwordHash = await bcrypt.hash(password, 12)
+          const inserted = await client.query(
+            `INSERT INTO staff (
+               staff_number, first_name, last_name, email, phone,
+               password_hash, status, employee_number, department,
+               approved_by, approved_at
+             )
+             VALUES (
+               'STF-' || LPAD(nextval('staff_id_sequence')::text, 6, '0'),
+               $1, $2, $3, NULLIF($4, ''), $5, 'active',
+               NULLIF($6, ''), NULLIF($7, ''), $8, CURRENT_TIMESTAMP
+             )
+             RETURNING id, staff_number, first_name, last_name, email,
+                       phone, status, employee_number, department, created_at`,
+            [
+              firstName, lastName, email, phone, passwordHash,
+              employeeNumber, department, user.id,
+            ],
+          )
+          const created = inserted.rows[0]
+
+          await client.query(
+            `INSERT INTO staff_role_assignments_v2
+               (staff_id, role_id, assigned_by)
+             VALUES ($1, $2, $3)`,
+            [created.id, roleResult.rows[0].id, user.id],
+          )
+
+          await client.query('COMMIT')
+
+          try {
+            await writeStaffAuditLog(
+              request, user.id, 'staff.created', 'staff', created.id,
+              'Staff account created by a Super Manager.',
+              { staffNumber: created.staff_number, roleKey, email: created.email },
+            )
+          } catch (auditError) {
+            console.error('Staff creation audit event failed:', auditError)
+          }
+
+          return json(response, 201, {
+            success: true,
+            staff: { ...created, role: roleKey, roles: [{
+              id: roleResult.rows[0].id,
+              roleKey: roleResult.rows[0].role_key,
+              roleName: roleResult.rows[0].role_name,
+            }] },
+          })
+        } catch (err) {
+          try { await client.query('ROLLBACK') } catch (rollbackError) { console.error('Staff creation rollback failed:', rollbackError) }
+          const code = (err as { code?: string })?.code
+          if (code === '23505') {
+            return error(response, 409, 'That staff email, employee number, or staff number is already in use.')
+          }
+          throw err
+        } finally {
+          client.release()
+        }
+      }
 
       if (action !== 'assign-role' && action !== 'assign-permission') {
         return error(response, 400, 'Unsupported staff action.')
@@ -696,6 +822,102 @@ export default async function handler(
       )
     }
 
+    if (action === 'edit-profile') {
+      const firstName =
+        typeof request.body?.first_name === 'string'
+          ? request.body.first_name.trim()
+          : ''
+      const lastName =
+        typeof request.body?.last_name === 'string'
+          ? request.body.last_name.trim()
+          : ''
+      const phoneInput = request.body?.phone
+      const phone =
+        typeof phoneInput === 'string' ? phoneInput.trim() : ''
+      const employeeInput = request.body?.employee_number
+      const employeeNumber =
+        typeof employeeInput === 'string' ? employeeInput.trim() : ''
+      const departmentInput = request.body?.department
+      const department =
+        typeof departmentInput === 'string' ? departmentInput.trim() : ''
+
+      if (!firstName || !lastName) {
+        return error(response, 400, 'First name and last name are required.')
+      }
+      if (firstName.length > 80 || lastName.length > 80) {
+        return error(response, 400, 'Names must be 80 characters or fewer.')
+      }
+      if (phone.length > 40 || employeeNumber.length > 64 || department.length > 120) {
+        return error(response, 400, 'Phone, employee number, or department exceeds its allowed length.')
+      }
+
+      const existingStaff = await db.query(
+        'SELECT id FROM staff WHERE id = $1 LIMIT 1',
+        [staffId],
+      )
+      if (existingStaff.rowCount !== 1) {
+        return error(response, 404, 'Staff member not found.')
+      }
+
+      if (employeeNumber) {
+        const duplicate = await db.query(
+          `SELECT id FROM staff
+           WHERE LOWER(employee_number) = LOWER($1) AND id <> $2
+           LIMIT 1`,
+          [employeeNumber, staffId],
+        )
+        if (duplicate.rowCount) {
+          return error(response, 409, 'That employee number is already assigned.')
+        }
+      }
+
+      const result = await db.query(
+        `UPDATE staff
+         SET first_name = $1,
+             last_name = $2,
+             phone = $3,
+             employee_number = $4,
+             department = $5,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $6 AND id <> $7
+         RETURNING id, staff_number, first_name, last_name, email, phone,
+                   status, employee_number, department, approved_by,
+                   approved_at, blocked_by, blocked_at, block_reason, updated_at`,
+        [
+          firstName,
+          lastName,
+          phone || null,
+          employeeNumber || null,
+          department || null,
+          staffId,
+          user.id,
+        ],
+      )
+
+      if (result.rowCount !== 1) {
+        return error(response, 404, 'Staff member not found or cannot be edited.')
+      }
+
+      try {
+        await writeStaffAuditLog(
+          request,
+          user.id,
+          'staff.profile_updated',
+          'staff',
+          staffId,
+          'Staff profile fields updated by Super Manager.',
+          {
+            changedFields: ['first_name', 'last_name', 'phone', 'employee_number', 'department'],
+            staffNumber: result.rows[0].staff_number,
+          },
+        )
+      } catch (auditError) {
+        console.error('Staff profile audit logging failed:', auditError)
+      }
+
+      return json(response, 200, { success: true, staff: result.rows[0] })
+    }
+
     const allowedActions = new Map<string, string>([
       ['activate', 'active'],
       ['suspend', 'suspended'],
@@ -759,6 +981,29 @@ export default async function handler(
 
     if (result.rowCount !== 1) {
       return error(response, 404, 'Staff member not found.')
+    }
+
+    try {
+      await writeStaffAuditLog(
+        request,
+        user.id,
+        `staff.${action}`,
+        'staff',
+        staffId,
+        `Staff status changed to ${nextStatus}.`,
+        {
+          previousAction: action,
+          newStatus: nextStatus,
+          reason:
+            typeof request.body?.reason === 'string'
+              ? request.body.reason.trim().slice(0, 500) || null
+              : null,
+        },
+      )
+    } catch (auditError) {
+      // Do not report the successful status update as failed if audit
+      // logging encounters a separate operational error.
+      console.error('Staff lifecycle audit logging failed:', auditError)
     }
 
     return json(response, 200, {

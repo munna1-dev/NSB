@@ -200,6 +200,22 @@ export async function updateManagementAccountStatus(
   return result.account
 }
 
+export async function postManagementDeposit(
+  accountId: string,
+  amount: string,
+  description: string,
+): Promise<void> {
+  await request('/api/management/accounts', {
+    method: 'POST',
+    body: JSON.stringify({
+      accountId,
+      amount,
+      description,
+      idempotencyKey: globalThis.crypto.randomUUID(),
+    }),
+  })
+}
+
 export interface ManagementTransaction {
   id: string
   reference: string
@@ -492,6 +508,43 @@ export async function updateManagementStaffStatus(
   })
 
   return result.staff
+}
+
+export async function updateManagementStaffProfile(
+  staffId: string,
+  profile: {
+    first_name: string
+    last_name: string
+    phone: string
+    employee_number: string
+    department: string
+  },
+): Promise<void> {
+  await request('/api/management/staff', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      action: 'edit-profile',
+      staffId,
+      ...profile,
+    }),
+  })
+}
+
+
+export async function createManagementStaff(input: {
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  employee_number: string
+  department: string
+  password: string
+  roleKey: string
+}): Promise<void> {
+  await request('/api/management/staff', {
+    method: 'POST',
+    body: JSON.stringify({ action: 'create-staff', ...input }),
+  })
 }
 
 export async function assignManagementRole(
