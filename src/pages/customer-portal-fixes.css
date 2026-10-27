@@ -1,0 +1,885 @@
+
+/* NORTHSTAR CUSTOMER PORTAL CLASS ALIGNMENT */
+/* Target the class names used by the current React page components. */
+
+.customer-shell__content > main,
+.customer-dashboard,
+.customer-accounts,
+.customer-transactions,
+.beneficiaries-page {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.customer-dashboard,
+.customer-accounts,
+.customer-transactions,
+.beneficiaries-page {
+  width: min(1240px, 100%);
+  margin-inline: auto;
+  padding: clamp(16px, 3vw, 32px);
+  color: var(--fs-navy, #102a43);
+}
+
+.customer-dashboard__header,
+.customer-accounts__hero,
+.customer-transactions__hero,
+.beneficiaries-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.customer-dashboard__eyebrow,
+.customer-accounts__eyebrow,
+.customer-transactions__eyebrow,
+.beneficiaries-eyebrow {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--fs-blue, #164a8a);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.customer-dashboard h1,
+.customer-accounts h1,
+.customer-transactions h1,
+.beneficiaries-page h1 {
+  margin: 0 0 8px;
+  color: var(--fs-navy, #102a43);
+  font-size: clamp(26px, 4vw, 38px);
+  line-height: 1.15;
+}
+
+.customer-dashboard__intro,
+.customer-accounts__hero p,
+.customer-transactions__hero p {
+  max-width: 650px;
+  margin: 0;
+  color: var(--fs-muted, #667085);
+  line-height: 1.6;
+}
+
+.customer-dashboard__header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.customer-dashboard__refresh,
+.customer-dashboard__primary-action,
+.customer-accounts__apply-button,
+.beneficiary-primary-button,
+.beneficiary-secondary-button,
+.beneficiary-danger-button {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 15px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--fs-navy, #102a43);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.customer-dashboard__primary-action,
+.customer-accounts__apply-button,
+.beneficiary-primary-button {
+  border-color: var(--fs-navy, #102a43);
+  background: var(--fs-navy, #102a43);
+  color: #fff;
+}
+
+.customer-dashboard button:disabled,
+.customer-accounts button:disabled,
+.customer-transactions button:disabled,
+.beneficiaries-page button:disabled {
+  cursor: not-allowed;
+  opacity: .65;
+}
+
+.customer-dashboard__notice,
+.customer-accounts__application-success,
+.customer-accounts__application-error,
+.customer-dashboard__error,
+.customer-dashboard__loading,
+.customer-dashboard__empty,
+.customer-accounts__error,
+.customer-accounts__loading,
+.customer-accounts__empty,
+.customer-transactions__error,
+.customer-transactions__loading,
+.customer-transactions__empty,
+.beneficiary-alert,
+.beneficiary-security-notice,
+.beneficiary-empty-state {
+  margin: 16px 0;
+  padding: 18px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--fs-muted, #667085);
+  line-height: 1.55;
+}
+
+.customer-dashboard__error,
+.customer-accounts__error,
+.customer-transactions__error,
+.beneficiary-alert,
+.customer-accounts__application-error {
+  border-color: #f1c5c5;
+  background: #fff8f8;
+  color: #a52222;
+}
+
+.customer-dashboard__loading,
+.customer-dashboard__empty,
+.customer-accounts__loading,
+.customer-accounts__empty,
+.customer-transactions__loading,
+.customer-transactions__empty,
+.beneficiary-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.customer-dashboard__loading-spinner,
+.customer-dashboard__error-icon,
+.beneficiary-security-icon,
+.beneficiary-empty-icon,
+.beneficiary-card-icon,
+.beneficiary-confirm-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.customer-dashboard__balance-card {
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 18px;
+  padding: clamp(22px, 4vw, 32px);
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 18px;
+  background: linear-gradient(135deg, #102a43, #164a8a);
+  color: #fff;
+  box-shadow: var(--fs-shadow-md, 0 8px 24px rgba(15,23,42,.1));
+}
+
+.customer-dashboard__balance-heading,
+.customer-dashboard__balance-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  color: rgba(255,255,255,.8);
+  font-size: 13px;
+}
+
+.customer-dashboard__balance-toggle {
+  display: inline-flex;
+  min-width: 40px;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255,255,255,.25);
+  border-radius: 9px;
+  background: rgba(255,255,255,.08);
+  color: #fff;
+}
+
+.customer-dashboard__balance-value {
+  display: block;
+  overflow-wrap: anywhere;
+  margin: 24px 0;
+  color: #fff;
+  font-size: clamp(30px, 5vw, 48px);
+  letter-spacing: -.04em;
+}
+
+.customer-dashboard__quick-grid,
+.customer-dashboard__accounts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0 32px;
+}
+
+.customer-dashboard__quick-link,
+.customer-dashboard__account {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 13px;
+  background: #fff;
+  color: var(--fs-navy, #102a43);
+  text-decoration: none;
+  box-shadow: var(--fs-shadow-sm, 0 1px 3px rgba(15,23,42,.08));
+}
+
+.customer-dashboard__quick-icon,
+.customer-dashboard__account-icon,
+.customer-dashboard__transaction-icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #edf3f8;
+  color: var(--fs-blue, #164a8a);
+}
+
+.customer-dashboard__section {
+  min-width: 0;
+  margin: 28px 0;
+}
+
+.customer-dashboard__section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.customer-dashboard__section-eyebrow {
+  margin: 0 0 5px;
+  color: var(--fs-blue, #164a8a);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: .12em;
+}
+
+.customer-dashboard__section-link,
+.customer-dashboard__account-arrow,
+.customer-dashboard__transaction-arrow {
+  color: var(--fs-blue, #164a8a);
+  font-weight: 750;
+}
+
+.customer-dashboard__account-top,
+.customer-dashboard__account-name,
+.customer-dashboard__account-balance,
+.customer-dashboard__account-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.customer-dashboard__account-name,
+.customer-dashboard__account-balance {
+  margin-top: 8px;
+}
+
+.customer-dashboard__account-name strong,
+.customer-dashboard__account-balance strong {
+  overflow-wrap: anywhere;
+}
+
+.customer-dashboard__status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #98a2b3;
+}
+
+.customer-dashboard__status-dot--active { background: #16845b; }
+.customer-dashboard__status-dot--pending { background: #c88900; }
+.customer-dashboard__status-dot--frozen,
+.customer-dashboard__status-dot--closed { background: #c83c4a; }
+
+.customer-dashboard__transactions {
+  overflow: hidden;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 13px;
+  background: #fff;
+}
+
+.customer-dashboard__transaction {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border-bottom: 1px solid var(--fs-border, #dde3ec);
+  color: inherit;
+  text-decoration: none;
+}
+
+.customer-dashboard__transaction:last-child { border-bottom: 0; }
+
+.customer-dashboard__transaction-info,
+.customer-dashboard__transaction-info strong,
+.customer-dashboard__transaction-info small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.customer-dashboard__transaction-info {
+  display: grid;
+  gap: 4px;
+}
+
+.customer-dashboard__transaction-info small {
+  color: var(--fs-muted, #667085);
+}
+
+.customer-dashboard__transaction-amount {
+  white-space: nowrap;
+  font-weight: 800;
+}
+
+.customer-dashboard__transaction-amount.is-incoming { color: #16845b; }
+.customer-dashboard__transaction-amount.is-outgoing { color: var(--fs-navy, #102a43); }
+
+.customer-dashboard__footer-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.customer-dashboard__footer-actions a {
+  display: inline-flex;
+  min-height: 42px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--fs-navy, #102a43);
+  font-weight: 750;
+}
+
+/* Accounts */
+.customer-accounts__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.customer-accounts__card {
+  min-width: 0;
+  padding: 22px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: var(--fs-shadow-sm, 0 1px 3px rgba(15,23,42,.08));
+}
+
+.customer-accounts__card-top,
+.customer-accounts__balances,
+.customer-accounts__card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.customer-accounts__card-top { margin-bottom: 18px; }
+
+.customer-accounts__icon {
+  display: inline-flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 11px;
+  background: #edf3f8;
+  color: var(--fs-blue, #164a8a);
+}
+
+.customer-accounts__type { font-weight: 800; }
+
+.customer-accounts__status {
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #edf7f1;
+  color: #217346;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.customer-accounts__status--pending { background: #fff7e4; color: #8a6512; }
+.customer-accounts__status--frozen,
+.customer-accounts__status--closed { background: #f3f4f5; color: #69727d; }
+
+.customer-accounts__balances {
+  align-items: flex-start;
+  margin: 18px 0;
+}
+
+.customer-accounts__balances > div { display: grid; gap: 6px; }
+.customer-accounts__balances span { color: var(--fs-muted, #667085); font-size: 12px; }
+.customer-accounts__balances strong { overflow-wrap: anywhere; font-size: clamp(17px, 3vw, 23px); }
+
+.customer-accounts__card-footer {
+  justify-content: flex-start;
+  padding-top: 14px;
+  border-top: 1px solid var(--fs-border, #dde3ec);
+}
+
+.customer-accounts__card-footer a {
+  color: var(--fs-blue, #164a8a);
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.customer-accounts__application-form {
+  margin: 20px 0;
+  padding: 22px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 13px;
+  background: #fff;
+}
+
+.customer-accounts__application-form label {
+  display: grid;
+  gap: 8px;
+  margin-top: 18px;
+  font-weight: 700;
+}
+
+.customer-accounts__application-form select {
+  width: 100%;
+  max-width: 460px;
+  min-height: 44px;
+  padding: 10px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--fs-navy, #102a43);
+}
+
+.customer-accounts__application-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.customer-accounts__application-success { border-color: #a7d7bd; background: #f4fbf7; }
+
+/* Transactions */
+.customer-transactions__filters {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
+  padding: 16px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.customer-transactions__filters label {
+  display: grid;
+  min-width: 0;
+  flex: 1 1 190px;
+  gap: 7px;
+  color: var(--fs-muted, #667085);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.customer-transactions__filters input,
+.customer-transactions__filters select {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+  padding: 10px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--fs-navy, #102a43);
+}
+
+.customer-transactions__search > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.customer-transactions__list {
+  overflow: hidden;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 13px;
+  background: #fff;
+}
+
+.customer-transactions__list-heading {
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--fs-border, #dde3ec);
+  color: var(--fs-muted, #667085);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.customer-transactions__row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-bottom: 1px solid var(--fs-border, #dde3ec);
+}
+
+.customer-transactions__row:last-child { border-bottom: 0; }
+
+.customer-transactions__icon {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: #edf3f8;
+  color: var(--fs-blue, #164a8a);
+}
+
+.customer-transactions__details {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.customer-transactions__details strong,
+.customer-transactions__details span {
+  overflow-wrap: anywhere;
+}
+
+.customer-transactions__details span {
+  color: var(--fs-muted, #667085);
+  font-size: 12px;
+}
+
+.customer-transactions__amount {
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 800;
+}
+
+.customer-transactions__amount--positive { color: #16845b; }
+.customer-transactions__footer { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 18px; }
+
+/* Beneficiaries */
+.beneficiaries-page { width: min(1120px, 100%); }
+
+.beneficiaries-container { min-width: 0; }
+
+.beneficiaries-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 20px;
+  color: var(--fs-muted, #667085);
+  font-size: 13px;
+}
+
+.beneficiaries-header h1 { margin-bottom: 8px; }
+
+.beneficiary-security-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f7fafc;
+}
+
+.beneficiary-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 20px 0;
+}
+
+.beneficiary-search {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 240px;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 9px;
+  background: #fff;
+}
+
+.beneficiary-search input {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+}
+
+.beneficiary-filters { display: flex; flex-wrap: wrap; gap: 8px; }
+
+.beneficiary-filters button {
+  min-height: 40px;
+  padding: 8px 12px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--fs-navy, #102a43);
+  font: inherit;
+  font-size: 12px;
+}
+
+.beneficiary-filters button.active {
+  border-color: var(--fs-navy, #102a43);
+  background: var(--fs-navy, #102a43);
+  color: #fff;
+}
+
+.beneficiary-list { display: grid; gap: 12px; }
+
+.beneficiary-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 13px;
+  background: #fff;
+  box-shadow: var(--fs-shadow-sm, 0 1px 3px rgba(15,23,42,.08));
+}
+
+.beneficiary-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  background: #edf3f8;
+  color: var(--fs-blue, #164a8a);
+}
+
+.beneficiary-card-content { min-width: 0; }
+
+.beneficiary-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.beneficiary-card-heading h2 {
+  margin: 0 0 8px;
+  overflow-wrap: anywhere;
+  font-size: 16px;
+}
+
+.beneficiary-card-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.beneficiary-card-details > div { display: grid; min-width: 0; gap: 4px; }
+.beneficiary-card-details span { overflow-wrap: anywhere; color: var(--fs-muted, #667085); font-size: 12px; }
+
+.beneficiary-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.beneficiary-card-actions button { min-height: 40px; padding: 8px 11px; border: 1px solid var(--fs-border, #dde3ec); border-radius: 8px; background: #fff; color: var(--fs-navy, #102a43); }
+.beneficiary-card-actions .danger,
+.beneficiary-danger-button { border-color: #efc3c3; color: #b42318; }
+
+.beneficiary-status {
+  display: inline-flex;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: #edf7f1;
+  color: #217346;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.beneficiary-status-disabled { background: #f3f4f5; color: #69727d; }
+
+.beneficiary-page-footer {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 24px;
+  color: var(--fs-muted, #667085);
+  font-size: 12px;
+}
+
+.beneficiary-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  overflow-y: auto;
+  padding: 18px;
+  background: rgba(16, 42, 67, .48);
+}
+
+.beneficiary-modal {
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 36px);
+  overflow-y: auto;
+  padding: 24px;
+  border-radius: 15px;
+  background: #fff;
+  box-shadow: var(--fs-shadow-lg, 0 18px 45px rgba(15,23,42,.14));
+}
+
+.beneficiary-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.beneficiary-modal-close {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 8px;
+  background: #fff;
+}
+
+.beneficiary-form { display: grid; gap: 16px; }
+.beneficiary-form label,
+.beneficiary-account-field { display: grid; min-width: 0; gap: 7px; font-size: 13px; font-weight: 700; }
+.beneficiary-form input,
+.beneficiary-form select,
+.beneficiary-form textarea { width: 100%; min-width: 0; min-height: 44px; padding: 10px; border: 1px solid var(--fs-border, #dde3ec); border-radius: 8px; background: #fff; color: var(--fs-navy, #102a43); }
+.beneficiary-form-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+.beneficiary-confirm-modal { text-align: center; }
+.beneficiary-confirm-icon { margin: 0 auto 14px; color: #b42318; }
+
+/* Fill gaps in existing page styles. */
+.customer-profile__image-card {
+  min-width: 0;
+  padding: 20px;
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 13px;
+  background: #fff;
+}
+
+.customer-transfer-review,
+.customer-payment-review {
+  min-width: 0;
+  padding: clamp(16px, 3vw, 24px);
+  border: 1px solid var(--fs-border, #dde3ec);
+  border-radius: 13px;
+  background: #fff;
+}
+
+.spin { animation: northstar-portal-spin .8s linear infinite; }
+
+@keyframes northstar-portal-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 760px) {
+  .customer-dashboard,
+  .customer-accounts,
+  .customer-transactions,
+  .beneficiaries-page {
+    padding: 18px 14px 32px;
+  }
+
+  .customer-dashboard__quick-grid,
+  .customer-dashboard__accounts,
+  .customer-accounts__list {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .customer-dashboard__header-actions,
+  .customer-dashboard__footer-actions {
+    width: 100%;
+  }
+
+  .customer-dashboard__header-actions > *,
+  .customer-dashboard__footer-actions > * {
+    flex: 1 1 140px;
+  }
+
+  .customer-dashboard__transaction {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .customer-dashboard__transaction-arrow { display: none; }
+
+  .customer-transactions__filters { align-items: stretch; flex-direction: column; }
+
+  .customer-transactions__row {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .customer-transactions__amount {
+    grid-column: 2;
+    text-align: left;
+  }
+
+  .beneficiary-card {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .beneficiary-card-actions { grid-column: 1 / -1; }
+}
+
+@media (max-width: 460px) {
+  .customer-dashboard__transaction {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .customer-dashboard__transaction-amount {
+    grid-column: 2;
+    white-space: normal;
+  }
+
+  .beneficiary-card {
+    padding: 15px;
+  }
+
+  .beneficiary-card-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .beneficiary-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .beneficiary-form-actions button { width: 100%; }
+}

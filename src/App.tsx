@@ -174,3 +174,5 @@ function App() {
 }
 
 export default App
+
+import "./pages/customer-portal-fixes.css"

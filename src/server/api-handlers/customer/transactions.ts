@@ -61,8 +61,8 @@ export default async function handler(
           t.created_at
         FROM transactions t
         JOIN accounts a
-          ON a.id = t.account_id
-        WHERE a.customer_id = $1
+          ON a.id::text = t.account_id::text
+        WHERE a.customer_id::text = $1::text
           AND ($2 = '' OR a.id::text = $2)
           AND (
             $3 = ''
