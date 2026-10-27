@@ -438,9 +438,28 @@ export default function ManagementStaffPage() {
             )}
           </button>
           <button
-            className={tab === 'staff' ? 'is-active' : ''}
+            className={tab === 'staff' && showCreateStaff ? 'is-active' : ''}
             type="button"
-            onClick={() => setTab('staff')}
+            onClick={() => {
+              setTab('staff')
+              setError('')
+              setShowCreateStaff(true)
+              setNewRoleKey(
+                roles.find((role) =>
+                  role.is_active && role.role_key !== 'super_manager'
+                )?.role_key ?? '',
+              )
+            }}
+          >
+            Create Staff
+          </button>
+          <button
+            className={tab === 'staff' && !showCreateStaff ? 'is-active' : ''}
+            type="button"
+            onClick={() => {
+              setTab('staff')
+              setShowCreateStaff(false)
+            }}
           >
             Staff Directory
           </button>
