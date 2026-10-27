@@ -59,15 +59,6 @@ export function ManagementRoute({
 
   const staffRole = staff.role as string
 
-  if (
-    staffRole !== 'super_manager' &&
-    staffRole !== 'developer' &&
-    staffRole !== 'management' &&
-    staffRole !== 'staff'
-  ) {
-    return <Navigate to="/customer" replace />
-  }
-
   if (superManagerOnly && staffRole !== 'super_manager') {
     return <Navigate to="/management" replace />
   }

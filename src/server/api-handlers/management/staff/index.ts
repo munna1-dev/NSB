@@ -238,6 +238,15 @@ export default async function handler(
             return error(response, 400, 'Choose an active management role.')
           }
 
+          const dashboardPermission = await client.query(
+            `SELECT id FROM management_permissions
+             WHERE permission_key = 'dashboard.view' LIMIT 1`,
+          )
+          if (dashboardPermission.rowCount !== 1) {
+            await client.query('ROLLBACK')
+            return error(response, 500, 'Dashboard permission is not configured. Contact the system administrator.')
+          }
+
           const duplicate = await client.query(
             `SELECT id FROM staff
              WHERE LOWER(email) = LOWER($1)
@@ -276,6 +285,18 @@ export default async function handler(
                (staff_id, role_id, assigned_by)
              VALUES ($1, $2, $3)`,
             [created.id, roleResult.rows[0].id, user.id],
+          )
+
+          await client.query(
+            `INSERT INTO staff_permission_assignments_v2
+               (staff_id, permission_id, effect, assigned_by)
+             VALUES ($1, $2, 'allow', $3)
+             ON CONFLICT (staff_id, permission_id)
+             DO UPDATE SET
+               effect = 'allow',
+               assigned_by = EXCLUDED.assigned_by,
+               assigned_at = CURRENT_TIMESTAMP`,
+            [created.id, dashboardPermission.rows[0].id, user.id],
           )
 
           await client.query('COMMIT')
@@ -439,6 +460,10 @@ export default async function handler(
 
       if (permissionResult.rowCount !== 1) {
         return error(response, 404, 'Management permission not found.')
+      }
+
+      if (permissionKey === 'dashboard.view' && effect === 'deny') {
+        return error(response, 400, 'Every staff account must retain access to its management dashboard.')
       }
 
       await db.query(
