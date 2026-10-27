@@ -1,7 +1,8 @@
-import { AlertCircle, ReceiptText, RefreshCw, Search } from 'lucide-react'
+import { AlertCircle, ReceiptText, RefreshCw, Search, CheckCircle2, XCircle } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import {
   getManagementTransactions,
+  updateManagementDepositStatus,
   type ManagementTransaction,
 } from '../../lib/managementApi'
 import './ManagementDataPage.css'
@@ -15,6 +16,8 @@ export function ManagementTransactionsPage() {
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [reviewBusy, setReviewBusy] = useState<string | null>(null)
+
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -33,10 +36,26 @@ export function ManagementTransactionsPage() {
     return () => window.clearTimeout(timer)
   }, [search, load])
 
+  async function reviewDeposit(item: ManagementTransaction, action: 'approve' | 'reject') {
+    if (reviewBusy) return
+    const verb = action === 'approve' ? 'approve' : 'reject'
+    if (!window.confirm(`Are you sure you want to ${verb} deposit ${item.reference}?`)) return
+    setReviewBusy(item.id)
+    setError('')
+    try {
+      await updateManagementDepositStatus(item.id, action)
+      await load()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to review deposit.')
+    } finally {
+      setReviewBusy(null)
+    }
+  }
+
   return (
     <div className="management-data">
       <header className="management-page-header">
-        <div><span className="management-page-header__eyebrow">LEDGER OVERSIGHT</span><h1>Transactions</h1><p>Read-only transaction activity across customer accounts.</p></div>
+        <div><span className="management-page-header__eyebrow">LEDGER OVERSIGHT</span><h1>Transactions</h1><p>Review pending deposits and monitor transaction activity across customer accounts.</p></div>
         <button className="management-button management-button--secondary" onClick={() => void load()} disabled={loading}><RefreshCw size={16} /> Refresh</button>
       </header>
 
@@ -54,7 +73,7 @@ export function ManagementTransactionsPage() {
         ) : (
           <div className="management-data__table-wrap">
             <table>
-              <thead><tr><th>Reference</th><th>Customer</th><th>Account</th><th>Type</th><th>Status</th><th>Amount</th><th>Date</th></tr></thead>
+              <thead><tr><th>Reference</th><th>Customer</th><th>Account</th><th>Type</th><th>Status</th><th>Amount</th><th>Date</th><th>Review</th></tr></thead>
               <tbody>
                 {items.map((item) => (
                   <tr key={item.id}>
@@ -65,6 +84,22 @@ export function ManagementTransactionsPage() {
                     <td><span className={`management-data__badge management-data__badge--${item.status}`}>{item.status}</span></td>
                     <td>{money(item.amount, item.currency)}</td>
                     <td>{new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(item.created_at))}</td>
+                    <td>
+                      {item.transaction_type === 'deposit' && item.status === 'pending' && (
+                        <>
+                          <button className="management-button management-button--primary"
+                            disabled={reviewBusy !== null}
+                            onClick={() => void reviewDeposit(item, 'approve')}>
+                            <CheckCircle2 size={15} /> {reviewBusy === item.id ? 'Saving…' : 'Approve'}
+                          </button>
+                          <button className="management-button management-button--danger"
+                            disabled={reviewBusy !== null}
+                            onClick={() => void reviewDeposit(item, 'reject')}>
+                            <XCircle size={15} /> Reject
+                          </button>
+                        </>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>

@@ -216,6 +216,16 @@ export async function postManagementDeposit(
   })
 }
 
+export async function updateManagementDepositStatus(
+  transactionId: string,
+  action: 'approve' | 'reject',
+): Promise<void> {
+  await request('/api/management/transactions', {
+    method: 'PATCH',
+    body: JSON.stringify({ transactionId, action }),
+  })
+}
+
 export interface ManagementTransaction {
   id: string
   reference: string

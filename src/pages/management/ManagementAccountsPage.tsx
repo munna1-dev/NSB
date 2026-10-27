@@ -1,8 +1,10 @@
-import { AlertCircle, Building2, RefreshCw, Search, X } from 'lucide-react'
+import type React from 'react'
+import { AlertCircle, Building2, RefreshCw, Search, X, PlusCircle } from 'lucide-react'
 import { useCallback, useEffect, useState } from 'react'
 import {
   getManagementAccounts,
   updateManagementAccountStatus,
+  postManagementDeposit,
   type ManagementAccount,
 } from '../../lib/managementApi'
 import './ManagementDataPage.css'
@@ -34,6 +36,11 @@ export function ManagementAccountsPage() {
   const [selected, setSelected] = useState<ManagementAccount | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [depositAmount, setDepositAmount] = useState('')
+  const [depositDescription, setDepositDescription] = useState('')
+  const [depositBusy, setDepositBusy] = useState(false)
+  const [depositMessage, setDepositMessage] = useState('')
+
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -51,6 +58,29 @@ export function ManagementAccountsPage() {
     const timer = window.setTimeout(() => void load(), 250)
     return () => window.clearTimeout(timer)
   }, [filter, search, load])
+
+  async function submitDeposit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selected || depositBusy) return
+    if (!window.confirm(`Post a deposit of ${depositAmount} ${selected.currency} to account ${selected.account_number}?`)) return
+
+    setDepositBusy(true)
+    setDepositMessage('')
+    try {
+      await postManagementDeposit(selected.id, depositAmount, depositDescription)
+      setDepositAmount('')
+      setDepositDescription('')
+      setDepositMessage('Deposit posted successfully.')
+      const refreshed = await getManagementAccounts(filter || undefined, search)
+      setItems(refreshed)
+      const refreshedSelected = refreshed.find((account) => account.id === selected.id)
+      if (refreshedSelected) setSelected(refreshedSelected)
+    } catch (err) {
+      setDepositMessage(err instanceof Error ? err.message : 'Unable to post deposit.')
+    } finally {
+      setDepositBusy(false)
+    }
+  }
 
   async function changeStatus(status: string) {
     if (!selected) return
@@ -135,6 +165,26 @@ export function ManagementAccountsPage() {
               <div className="management-data__detail-item"><label>Current balance</label>{money(selected.current_balance, selected.currency)}</div>
               <div className="management-data__detail-item"><label>Opened</label>{date(selected.created_at)}</div>
             </div>
+            {selected.status === 'active' && (
+              <form onSubmit={submitDeposit} className="management-data__detail" style={{ marginTop: 20 }}>
+                <h3><PlusCircle size={17} /> Add deposit</h3>
+                <label className="management-data__detail-item">
+                  <span>Amount ({selected.currency})</span>
+                  <input type="number" min="0.01" max="1000000000" step="0.01"
+                    value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} required />
+                </label>
+                <label className="management-data__detail-item">
+                  <span>Description</span>
+                  <input value={depositDescription} maxLength={300}
+                    onChange={(e) => setDepositDescription(e.target.value)}
+                    placeholder="Deposit reason or reference" required />
+                </label>
+                {depositMessage && <div role="status">{depositMessage}</div>}
+                <button type="submit" className="management-button management-button--primary" disabled={depositBusy}>
+                  {depositBusy ? 'Posting…' : 'Post deposit'}
+                </button>
+              </form>
+            )}
             <div className="management-data__actions">
               {selected.status !== 'active' && selected.status !== 'closed' && <button className="management-button management-button--primary" onClick={() => void changeStatus('active')}>Activate</button>}
               {selected.status === 'active' && <button className="management-button management-button--secondary" onClick={() => void changeStatus('frozen')}>Freeze</button>}

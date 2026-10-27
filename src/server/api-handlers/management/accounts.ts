@@ -15,6 +15,123 @@ export default async function handler(
 ) {
   const db = getDb()
 
+  // SUPER_MANAGER_DEPOSIT_PATCH
+  if (request.method === 'POST') {
+    const manager = await requirePermission(request, 'accounts.view')
+    if (!manager || manager.role !== 'super_manager') {
+      return error(response, 403, 'Only the Super Manager can post deposits.')
+    }
+
+    const body = request.body && typeof request.body === 'object'
+      ? request.body as Record<string, unknown>
+      : {}
+    const accountId = typeof body.accountId === 'string' ? body.accountId.trim() : ''
+    const amountText = String(body.amount ?? '').trim()
+    const description = typeof body.description === 'string' ? body.description.trim() : ''
+    const key = typeof body.idempotencyKey === 'string' ? body.idempotencyKey.trim() : ''
+
+    if (!accountId || !/^\d+(?:\.\d{1,2})?$/.test(amountText) ||
+        !key || key.length > 100 || !description || description.length > 300) {
+      return error(response, 400, 'Enter a valid account, positive amount and description.')
+    }
+
+    const amount = Number(amountText)
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 1000000000) {
+      return error(response, 400, 'Deposit amount is outside the allowed range.')
+    }
+
+    const safeKey = key.replace(/[^a-zA-Z0-9-]/g, '').slice(0, 55)
+    if (!safeKey) {
+      return error(response, 400, 'The deposit idempotency key is invalid.')
+    }
+    const reference = `DEP-${safeKey}`
+    const client = await db.connect()
+    try {
+      await client.query('BEGIN')
+
+      await client.query('SELECT pg_advisory_xact_lock(hashtext($1))', [reference])
+      const previous = await client.query(
+        `SELECT id, reference, account_id, amount, transaction_type
+         FROM transactions WHERE reference = $1 LIMIT 1`,
+        [reference],
+      )
+      if (previous.rowCount) {
+        const existing = previous.rows[0]
+        await client.query('COMMIT')
+        if (
+          String(existing.account_id) !== accountId ||
+          Number(existing.amount) !== amount ||
+          existing.transaction_type !== 'deposit'
+        ) {
+          return error(response, 409, 'This deposit key was already used for a different deposit.')
+        }
+        return response.status(200).json({
+          ok: true, duplicate: true, reference: existing.reference,
+        })
+      }
+
+      const found = await client.query(
+        `SELECT a.id, a.account_number, a.status, a.currency,
+                c.customer_number, c.role
+         FROM accounts a
+         JOIN customers c ON c.id = a.customer_id
+         WHERE a.id::text = $1
+         FOR UPDATE OF a`,
+        [accountId],
+      )
+      if (found.rowCount !== 1) {
+        await client.query('ROLLBACK')
+        return error(response, 404, 'Customer account not found.')
+      }
+
+      const account = found.rows[0]
+      if (account.status !== 'active' ||
+          account.role === 'management' || account.role === 'developer') {
+        await client.query('ROLLBACK')
+        return error(response, 409, 'This account cannot receive a deposit.')
+      }
+
+      await client.query(
+        `UPDATE accounts
+         SET available_balance = available_balance + $1,
+             current_balance = current_balance + $1,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $2`,
+        [amount.toFixed(2), account.id],
+      )
+
+      await client.query(
+        `INSERT INTO transactions
+           (account_id, reference, transaction_type, status, description,
+            amount, currency, metadata)
+         VALUES ($1, $2, 'deposit', 'completed', $3, $4, $5, $6)`,
+        [account.id, reference, description, amount.toFixed(2), account.currency,
+         JSON.stringify({ source: 'management_manual_deposit', actorStaffId: manager.id })],
+      )
+
+      await client.query('COMMIT')
+
+      try {
+        await writeStaffAuditLog(
+          request, manager.id, 'deposit.posted', 'account', account.id,
+          `Manual deposit posted to account ${account.account_number}.`,
+          { reference, amount: amount.toFixed(2), currency: account.currency,
+            customerNumber: account.customer_number },
+        )
+      } catch (auditError) {
+        console.error('Deposit audit logging failed:', auditError)
+      }
+
+      return response.status(201).json({ ok: true, reference })
+    } catch (depositError) {
+      await client.query('ROLLBACK')
+      console.error('Management deposit failed:', depositError)
+      return error(response, 500, 'Unable to post deposit.')
+    } finally {
+      client.release()
+    }
+  }
+
   const requestedStatus = String(request.body?.status ?? '').trim()
 
   if (
@@ -264,6 +381,6 @@ export default async function handler(
     }
   }
 
-  response.setHeader('Allow', 'GET, PATCH')
+  response.setHeader('Allow', 'GET, POST, PATCH')
   return error(response, 405, 'Method not allowed.')
 }
