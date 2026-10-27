@@ -633,9 +633,7 @@ export default function ManagementStaffPage() {
                 </form>
               )}
             </section>
-          </div>
-        ) : tab === 'staff' ? (
-          <div className="management-staff__directory">
+
             <div className="management-table-wrap">
               <table className="management-table">
                 <thead>
@@ -696,6 +694,9 @@ export default function ManagementStaffPage() {
               </table>
             </div>
 
+          </div>
+        ) : tab === 'staff' ? (
+          <div className="management-staff__directory">
             <div className="management-control-grid">
               <section className="management-control-card">
                 <div className="management-control-card__heading">

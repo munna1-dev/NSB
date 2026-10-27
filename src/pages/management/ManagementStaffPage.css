@@ -706,8 +706,3 @@
   display: none;
 }
 
-
-/* Staff Directory retains its records table; creation has its own console. */
-.management-staff__directory > .management-control-grid {
-  display: none;
-}
