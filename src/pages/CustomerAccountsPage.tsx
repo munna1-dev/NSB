@@ -1,13 +1,15 @@
 import {
   ArrowRight,
+  Plus,
   CreditCard,
   Landmark,
   PiggyBank,
   WalletCards,
 } from "lucide-react"
 import { useEffect, useState } from "react"
+import type { FormEvent } from "react"
 import { Link } from "react-router-dom"
-import { getCustomerAccounts } from "../lib/customerApi"
+import { getCustomerAccounts, getCustomerProfile } from "../lib/customerApi"
 import { formatCurrency } from "../lib/format"
 import type { AccountType, BankAccount } from "../types"
 import "./CustomerAccountsPage.css"
@@ -35,6 +37,19 @@ export function CustomerAccountsPage() {
   const [accounts, setAccounts] = useState<BankAccount[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
+  const [showApplicationForm, setShowApplicationForm] = useState(false)
+  const [applicationType, setApplicationType] = useState<AccountType>("checking")
+  const [applicationSubmitting, setApplicationSubmitting] = useState(false)
+  const [applicationError, setApplicationError] = useState("")
+  const [applicationReference, setApplicationReference] = useState("")
+
+  const availableAccountTypes: AccountType[] = (
+    ["checking", "savings", "business", "credit"] as AccountType[]
+  ).filter(
+    (type) => !accounts.some(
+      (account) => account.accountType === type && account.status !== "closed",
+    ),
+  )
 
   useEffect(() => {
     let mounted = true
@@ -71,6 +86,59 @@ export function CustomerAccountsPage() {
       mounted = false
     }
   }, [])
+
+  async function submitApplication(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    setApplicationError("")
+    setApplicationReference("")
+
+    const selectedType = availableAccountTypes.includes(applicationType)
+      ? applicationType
+      : availableAccountTypes[0]
+
+    if (!selectedType) {
+      setApplicationError("There are no additional account types available to apply for.")
+      return
+    }
+
+    setApplicationSubmitting(true)
+
+    try {
+      const profile = await getCustomerProfile()
+      const response = await fetch("/api/public/account-applications", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          accountType: selectedType,
+          firstName: profile.firstName,
+          lastName: profile.lastName,
+          email: profile.email,
+          phone: profile.phone || "",
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.ok) {
+        throw new Error(result.error || "Unable to submit your application.")
+      }
+
+      setApplicationReference(result.application?.reference || "Received")
+      setShowApplicationForm(false)
+    } catch (reason) {
+      setApplicationError(
+        reason instanceof Error
+          ? reason.message
+          : "Unable to submit your application.",
+      )
+    } finally {
+      setApplicationSubmitting(false)
+    }
+  }
 
   if (loading) {
     return (
@@ -111,8 +179,83 @@ export function CustomerAccountsPage() {
             Review your NorthStarBank accounts, balances, and current
             account status.
           </p>
+          <button
+            type="button"
+            className="customer-accounts__apply-button"
+            disabled={availableAccountTypes.length === 0}
+            onClick={() => {
+              setApplicationError("")
+              setShowApplicationForm((visible) => !visible)
+            }}
+          >
+            <Plus size={17} />
+            Open another account
+          </button>
         </div>
       </header>
+
+      {showApplicationForm && (
+        <form
+          className="customer-accounts__application-form"
+          onSubmit={submitApplication}
+        >
+          <h2>Apply for another account</h2>
+          <p>
+            Your application will be linked to your existing customer profile
+            and reviewed by NorthStarBank management.
+          </p>
+          <label>
+            Account type
+            <select
+              value={
+                availableAccountTypes.includes(applicationType)
+                  ? applicationType
+                  : availableAccountTypes[0] || ""
+              }
+              onChange={(event) =>
+                setApplicationType(event.target.value as AccountType)
+              }
+              required
+            >
+              {availableAccountTypes.map((type) => (
+                <option value={type} key={type}>
+                  {type === "credit"
+                    ? "Credit account"
+                    : type.charAt(0).toUpperCase() + type.slice(1)}
+                </option>
+              ))}
+            </select>
+          </label>
+          {applicationError && (
+            <p className="customer-accounts__application-error" role="alert">
+              {applicationError}
+            </p>
+          )}
+          <div className="customer-accounts__application-actions">
+            <button type="submit" disabled={applicationSubmitting || !availableAccountTypes.length}>
+              {applicationSubmitting ? "Submitting…" : "Submit application"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowApplicationForm(false)}
+              disabled={applicationSubmitting}
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      )}
+
+      {applicationReference && (
+        <div className="customer-accounts__application-success" role="status">
+          <strong>Application received</strong>
+          <p>
+            Reference: {applicationReference}. Your application is awaiting
+            management review. Approved accounts will appear here under your
+            existing customer profile.
+          </p>
+        </div>
+      )}
 
       {accounts.length === 0 ? (
         <div className="customer-accounts__empty">
