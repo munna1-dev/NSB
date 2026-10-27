@@ -16,7 +16,7 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react"
-import { useState } from "react"
+import {useEffect, useState} from "react"
 import type { ReactNode } from "react"
 import { Link, NavLink, useNavigate } from "react-router-dom"
 import { signOutCustomer } from "../lib/session"
@@ -98,7 +98,36 @@ const navigation = [
 
 export function CustomerShell({ children, customer }: CustomerShellProps) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
   const navigate = useNavigate()
+  const [dashboardImageUrl, setDashboardImageUrl] = useState(customer.profileImageUrl)
+
+  useEffect(() => {
+    setDashboardImageUrl(customer.profileImageUrl)
+  }, [customer.profileImageUrl])
+
+  useEffect(() => {
+    const refreshProfileImage = async () => {
+      try {
+        const response = await fetch("/api/customer/profile", {
+          credentials: "include",
+          cache: "no-store",
+        })
+        if (!response.ok) return
+        const result = await response.json()
+        const updated = result?.customer ?? result?.data ?? result
+        const url = updated?.profileImageUrl
+        if (url !== undefined) {
+          setDashboardImageUrl(url)
+          setFailedImageUrl(null)
+        }
+      } catch {
+        // Keep the current avatar if refreshing fails.
+      }
+    }
+    window.addEventListener("northstar:profile-image-updated", refreshProfileImage)
+    return () => window.removeEventListener("northstar:profile-image-updated", refreshProfileImage)
+  }, [])
 
   async function handleSignOut() {
     await signOutCustomer()
@@ -130,10 +159,13 @@ export function CustomerShell({ children, customer }: CustomerShellProps) {
 
           <div className="customer-shell__user">
             <div className="customer-shell__user-avatar">
-              {customer.profileImageUrl ? (
+              {dashboardImageUrl &&
+              failedImageUrl !== dashboardImageUrl ? (
                 <img
-                  src={`${customer.profileImageUrl}?v=${encodeURIComponent(customer.id)}`}
-                  alt=""
+                  key={dashboardImageUrl}
+                  src={`${dashboardImageUrl}?v=${encodeURIComponent(customer.id)}&t=${Date.now()}`}
+                  alt={`${customer.firstName} ${customer.lastName}`}
+                  onError={() => setFailedImageUrl(dashboardImageUrl ?? null)}
                 />
               ) : (
                 <>

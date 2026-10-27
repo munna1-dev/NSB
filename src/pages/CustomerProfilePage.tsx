@@ -103,6 +103,7 @@ export function CustomerProfilePage() {
       )
 
       setCustomer(updatedCustomer)
+      window.dispatchEvent(new Event("northstar:profile-image-updated"))
       setImageMessage("Profile picture updated successfully.")
     } catch (uploadError) {
       setImageError(
@@ -131,6 +132,7 @@ export function CustomerProfilePage() {
         ...customer,
         profileImageUrl: null,
       })
+      window.dispatchEvent(new Event("northstar:profile-image-updated"))
       setImageMessage("Profile picture removed.")
     } catch (removeError) {
       setImageError(
