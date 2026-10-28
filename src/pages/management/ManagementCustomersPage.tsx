@@ -156,7 +156,7 @@ export function ManagementCustomersPage() {
   }
 
   return (
-    <section className="management-page">
+    <section className="management-page management-customers">
       <div className="management-page__header">
         <div>
           <p className="management-page__eyebrow">Customer operations</p>
