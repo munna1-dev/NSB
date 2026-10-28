@@ -32,13 +32,8 @@ export default async function handler(
       await client.query('BEGIN')
       const found = await client.query(
         `SELECT t.id, t.reference, t.transaction_type, t.status, t.amount,
-<<<<<<< HEAD
-                t.currency, t.description, t.account_id, a.customer_id,
-                a.status AS account_status, a.account_number
-=======
-                t.account_id, a.status AS account_status, a.account_number,
-                a.currency, c.id AS customer_id
->>>>>>> dbcfd1a (Complete NorthStarBank transaction updates)
+                t.currency, t.description, t.account_id, a.status AS account_status, a.account_number,
+                c.id AS customer_id
          FROM transactions t
          JOIN accounts a ON a.id = t.account_id
          JOIN customers c ON c.id = a.customer_id
