@@ -32,10 +32,16 @@ export default async function handler(
       await client.query('BEGIN')
       const found = await client.query(
         `SELECT t.id, t.reference, t.transaction_type, t.status, t.amount,
+<<<<<<< HEAD
                 t.currency, t.description, t.account_id, a.customer_id,
                 a.status AS account_status, a.account_number
+=======
+                t.account_id, a.status AS account_status, a.account_number,
+                a.currency, c.id AS customer_id
+>>>>>>> dbcfd1a (Complete NorthStarBank transaction updates)
          FROM transactions t
          JOIN accounts a ON a.id = t.account_id
+         JOIN customers c ON c.id = a.customer_id
          WHERE t.id::text = $1
          FOR UPDATE OF t, a`,
         [transactionId],
@@ -78,6 +84,20 @@ export default async function handler(
         [nextStatus, tx.id],
       )
       await client.query('COMMIT')
+
+      // Best-effort email after the review is committed.
+      await sendTransactionNotification({
+        customerId: tx.customer_id,
+        type: 'deposit',
+        reference: tx.reference,
+        amount: tx.amount,
+        currency: tx.currency,
+        status: nextStatus,
+        accountNumber: tx.account_number,
+        description: action === 'approve'
+          ? 'Your deposit was approved.'
+          : 'Your deposit was rejected.',
+      })
 
       try {
         const { writeStaffAuditLog } = await import('../../auth/audit.js')
