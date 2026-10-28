@@ -5,6 +5,7 @@ import {
   getManagementAccounts,
   updateManagementAccountStatus,
   postManagementDeposit,
+  updateManagementWithdrawalControls,
   type ManagementAccount,
 } from '../../lib/managementApi'
 import './ManagementDataPage.css'
@@ -40,6 +41,10 @@ export function ManagementAccountsPage() {
   const [depositDescription, setDepositDescription] = useState('')
   const [depositBusy, setDepositBusy] = useState(false)
   const [depositMessage, setDepositMessage] = useState('')
+  const [withdrawalsBlocked, setWithdrawalsBlocked] = useState(false)
+  const [withdrawalLimit, setWithdrawalLimit] = useState('')
+  const [withdrawalBusy, setWithdrawalBusy] = useState(false)
+  const [withdrawalMessage, setWithdrawalMessage] = useState('')
 
 
   const load = useCallback(async () => {
@@ -79,6 +84,47 @@ export function ManagementAccountsPage() {
       setDepositMessage(err instanceof Error ? err.message : 'Unable to post deposit.')
     } finally {
       setDepositBusy(false)
+    }
+  }
+
+  useEffect(() => {
+    setWithdrawalsBlocked(selected?.withdrawals_blocked ?? false)
+    setWithdrawalLimit(
+      selected?.withdrawal_limit == null ? '' : String(selected.withdrawal_limit),
+    )
+    setWithdrawalMessage('')
+  }, [selected?.id, selected?.withdrawals_blocked, selected?.withdrawal_limit])
+
+  async function saveWithdrawalControls(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!selected || withdrawalBusy) return
+
+    const normalizedLimit = withdrawalLimit.trim() === '' ? null : withdrawalLimit.trim()
+    if (normalizedLimit !== null &&
+        (!/^\\d+(?:\\.\\d{1,2})?$/.test(normalizedLimit) ||
+         !Number.isFinite(Number(normalizedLimit)) ||
+         Number(normalizedLimit) < 0 ||
+         Number(normalizedLimit) > 1000000000)) {
+      setWithdrawalMessage('Enter a maximum of 0 to 1,000,000,000, with up to two decimals; leave blank for no limit.')
+      return
+    }
+
+    if (!window.confirm('Save withdrawal controls for this account?')) return
+    setWithdrawalBusy(true)
+    setWithdrawalMessage('')
+    try {
+      await updateManagementWithdrawalControls(
+        selected.id, withdrawalsBlocked, normalizedLimit,
+      )
+      const refreshed = await getManagementAccounts(filter || undefined, search)
+      setItems(refreshed)
+      const updated = refreshed.find((account) => account.id === selected.id)
+      if (updated) setSelected(updated)
+      setWithdrawalMessage('Withdrawal controls saved.')
+    } catch (err) {
+      setWithdrawalMessage(err instanceof Error ? err.message : 'Unable to save withdrawal controls.')
+    } finally {
+      setWithdrawalBusy(false)
     }
   }
 
@@ -185,6 +231,42 @@ export function ManagementAccountsPage() {
                 </button>
               </form>
             )}
+            <form onSubmit={saveWithdrawalControls} className="management-data__detail" style={{ marginTop: 20 }}>
+              <h3>Withdrawal controls</h3>
+              <label className="management-data__detail-item">
+                <span>
+                  <input
+                    type="checkbox"
+                    checked={withdrawalsBlocked}
+                    onChange={(e) => setWithdrawalsBlocked(e.target.checked)}
+                  />{' '}
+                  Block customer withdrawals
+                </span>
+              </label>
+              <label className="management-data__detail-item">
+                <span>Maximum per withdrawal ({selected.currency})</span>
+                <input
+                  type="number"
+                  min="0"
+                  max="1000000000"
+                  step="0.01"
+                  value={withdrawalLimit}
+                  onChange={(e) => setWithdrawalLimit(e.target.value)}
+                  placeholder="Leave blank for no limit"
+                />
+              </label>
+              <p className="management-data__secondary">
+                Blank means no per-withdrawal maximum. A limit of 0 permits no positive withdrawal.
+              </p>
+              {withdrawalMessage && <div role="status">{withdrawalMessage}</div>}
+              <button
+                type="submit"
+                className="management-button management-button--primary"
+                disabled={withdrawalBusy}
+              >
+                {withdrawalBusy ? 'Saving…' : 'Save withdrawal controls'}
+              </button>
+            </form>
             <div className="management-data__actions">
               {selected.status !== 'active' && selected.status !== 'closed' && <button className="management-button management-button--primary" onClick={() => void changeStatus('active')}>Activate</button>}
               {selected.status === 'active' && <button className="management-button management-button--secondary" onClick={() => void changeStatus('frozen')}>Freeze</button>}

@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getDb } from '../../db/client.js'
+import { sendTransactionNotification } from '../../email/transaction-notifications.js'
 import { writeStaffAuditLog } from '../../auth/audit.js'
 import { requirePermission } from '../../auth/management.js'
 
@@ -72,7 +73,7 @@ export default async function handler(
 
       const found = await client.query(
         `SELECT a.id, a.account_number, a.status, a.currency,
-                c.customer_number, c.role
+                c.customer_number, c.role, c.id AS customer_id
          FROM accounts a
          JOIN customers c ON c.id = a.customer_id
          WHERE a.id::text = $1
@@ -111,6 +112,17 @@ export default async function handler(
 
       await client.query('COMMIT')
 
+      await sendTransactionNotification({
+        customerId: account.customer_id,
+        type: 'deposit',
+        reference,
+        amount,
+        currency: account.currency,
+        status: 'completed',
+        accountNumber: account.account_number,
+        description,
+      })
+
       try {
         await writeStaffAuditLog(
           request, manager.id, 'deposit.posted', 'account', account.id,
@@ -127,6 +139,101 @@ export default async function handler(
       await client.query('ROLLBACK')
       console.error('Management deposit failed:', depositError)
       return error(response, 500, 'Unable to post deposit.')
+    } finally {
+      client.release()
+    }
+  }
+
+  // WITHDRAWAL_CONTROLS_PATCH_V1
+  if (request.method === 'PATCH' &&
+      request.body?.action === 'withdrawal_controls') {
+    const manager = await requirePermission(request, 'accounts.view')
+    if (!manager || manager.role !== 'super_manager') {
+      return error(response, 403, 'Only the Super Manager can change withdrawal controls.')
+    }
+
+    const body = request.body as Record<string, unknown>
+    const accountId = typeof body.accountId === 'string' ? body.accountId.trim() : ''
+    const blocked = body.withdrawalsBlocked
+    const limitText = body.withdrawalLimit
+
+    if (!accountId || typeof blocked !== 'boolean') {
+      return error(response, 400, 'Account and withdrawal-block setting are required.')
+    }
+
+    let limit: string | null = null
+    if (limitText !== null && limitText !== undefined && String(limitText).trim() !== '') {
+      const text = String(limitText).trim()
+      if (!/^\\d+(?:\\.\\d{1,2})?$/.test(text)) {
+        return error(response, 400, 'Maximum withdrawal must be a valid amount with up to two decimals.')
+      }
+      const amount = Number(text)
+      if (!Number.isFinite(amount) || amount < 0 || amount > 1000000000) {
+        return error(response, 400, 'Maximum withdrawal must be between 0 and 1,000,000,000.')
+      }
+      limit = amount.toFixed(2)
+    }
+
+    const client = await db.connect()
+    try {
+      await client.query('BEGIN')
+      const found = await client.query(
+        `SELECT a.id, a.account_number, a.withdrawals_blocked, a.withdrawal_limit,
+                c.role
+         FROM accounts a
+         INNER JOIN customers c ON c.id = a.customer_id
+         WHERE a.id::text = $1
+         FOR UPDATE OF a`,
+        [accountId],
+      )
+
+      if (found.rowCount !== 1) {
+        await client.query('ROLLBACK')
+        return error(response, 404, 'Account not found.')
+      }
+
+      const account = found.rows[0]
+      if (account.role === 'management' || account.role === 'developer') {
+        await client.query('ROLLBACK')
+        return error(response, 403, 'Staff accounts cannot be changed through customer withdrawal controls.')
+      }
+
+      const updated = await client.query(
+        `UPDATE accounts
+         SET withdrawals_blocked = $1,
+             withdrawal_limit = $2,
+             updated_at = CURRENT_TIMESTAMP
+         WHERE id = $3
+         RETURNING id, account_number, withdrawals_blocked, withdrawal_limit`,
+        [blocked, limit, account.id],
+      )
+      await client.query('COMMIT')
+
+      try {
+        await writeStaffAuditLog(
+          request, manager.id, 'account.withdrawal_controls_updated',
+          'account', account.id,
+          `Withdrawal controls updated for account ${account.account_number}.`,
+          {
+            previous: {
+              withdrawalsBlocked: account.withdrawals_blocked,
+              withdrawalLimit: account.withdrawal_limit === null ? null : String(account.withdrawal_limit),
+            },
+            current: {
+              withdrawalsBlocked: blocked,
+              withdrawalLimit: limit,
+            },
+          },
+        )
+      } catch (auditError) {
+        console.error('Withdrawal controls audit logging failed:', auditError)
+      }
+
+      return response.status(200).json({ ok: true, account: updated.rows[0] })
+    } catch (controlError) {
+      try { await client.query('ROLLBACK') } catch {}
+      console.error('Updating withdrawal controls failed:', controlError)
+      return error(response, 500, 'Unable to update withdrawal controls.')
     } finally {
       client.release()
     }
@@ -215,6 +322,8 @@ export default async function handler(
           a.currency,
           a.available_balance,
           a.current_balance,
+          a.withdrawals_blocked,
+          a.withdrawal_limit,
           a.created_at,
           a.updated_at,
           c.id AS customer_id,

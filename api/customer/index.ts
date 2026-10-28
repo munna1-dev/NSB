@@ -18,6 +18,7 @@ import settings from '../../src/server/api-handlers/customer/settings.js'
 import support from '../../src/server/api-handlers/customer/support.js'
 import transactions from '../../src/server/api-handlers/customer/transactions.js'
 import transfers from '../../src/server/api-handlers/customer/transfers.js'
+import withdrawals from '../../src/server/api-handlers/customer/withdrawals.js'
 
 export default async function handler(
   req: VercelRequest,
@@ -107,6 +108,11 @@ export default async function handler(
   if (resource === 'transfers' && parts.length === 1) {
     return transfers(req, res)
   }
+
+  if (resource === 'withdrawals' && parts.length === 1) {
+    return withdrawals(req, res)
+  }
+
 
   return res.status(404).json({
     ok: false,

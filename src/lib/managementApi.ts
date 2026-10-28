@@ -159,6 +159,8 @@ export interface ManagementAccount {
   currency: string
   available_balance: string
   current_balance: string
+  withdrawals_blocked: boolean
+  withdrawal_limit: string | null
   created_at: string
   updated_at: string
   customer_id: string
@@ -198,6 +200,22 @@ export async function updateManagementAccountStatus(
   })
 
   return result.account
+}
+
+export async function updateManagementWithdrawalControls(
+  accountId: string,
+  withdrawalsBlocked: boolean,
+  withdrawalLimit: string | null,
+): Promise<void> {
+  await request('/api/management/accounts', {
+    method: 'PATCH',
+    body: JSON.stringify({
+      action: 'withdrawal_controls',
+      accountId,
+      withdrawalsBlocked,
+      withdrawalLimit,
+    }),
+  })
 }
 
 export async function postManagementDeposit(

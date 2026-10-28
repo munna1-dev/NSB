@@ -16,11 +16,11 @@ export function getDb(): Pool {
   if (!pool) {
     pool = new Pool({
       connectionString: getDatabaseUrl(),
-      max: 5,
+      max: 1,
       idleTimeoutMillis: 10_000,
       connectionTimeoutMillis: 15_000,
       ssl: {
-        rejectUnauthorized: false,
+        rejectUnauthorized: true,
       },
     })
   }

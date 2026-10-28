@@ -349,7 +349,7 @@ export default async function handler(
           SET
             status = $1,
             completed_at = CASE
-              WHEN $1 = 'completed' THEN CURRENT_TIMESTAMP
+              WHEN $1::varchar = 'completed' THEN CURRENT_TIMESTAMP
               ELSE completed_at
             END
           WHERE id = $2
