@@ -20,6 +20,7 @@ import type { StaffProfile } from '../lib/session'
 import { signOutStaff } from '../lib/session'
 import { BrandMark } from './BrandMark'
 import './ManagementShell.css'
+import '../pages/management/ManagementApplicationsPage.css'
 
 interface ManagementShellProps {
   staff: StaffProfile
