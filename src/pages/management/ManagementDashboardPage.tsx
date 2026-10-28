@@ -1,6 +1,7 @@
 import {
   Activity,
   ArrowRight,
+  Banknote,
   Building2,
   ClipboardCheck,
   CreditCard,
@@ -148,13 +149,22 @@ export function ManagementDashboardPage() {
           </p>
         </div>
 
-        <Link
-          className="management-dashboard__primary-action"
-          to="/management/applications"
-        >
-          Review applications
-          <ArrowRight size={16} />
-        </Link>
+        <div className="management-dashboard__header-actions">
+          <Link
+            className="management-dashboard__deposit-action"
+            to="/management/accounts"
+          >
+            <Banknote size={17} />
+            Post deposit
+          </Link>
+          <Link
+            className="management-dashboard__primary-action"
+            to="/management/applications"
+          >
+            Review applications
+            <ArrowRight size={16} />
+          </Link>
+        </div>
       </header>
 
       {loading ? (

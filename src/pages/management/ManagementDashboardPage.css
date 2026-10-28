@@ -32,6 +32,34 @@
   line-height: 1.6;
 }
 
+.management-dashboard__header-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.management-dashboard__deposit-action {
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 15px;
+  flex: 0 0 auto;
+  border: 1px solid var(--fs-border-strong);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--fs-navy);
+  font-size: 12px;
+  font-weight: 750;
+}
+
+.management-dashboard__deposit-action:hover {
+  border-color: var(--fs-blue);
+  color: var(--fs-blue);
+}
+
 .management-dashboard__primary-action {
   min-height: 42px;
   display: inline-flex;
@@ -265,7 +293,14 @@
     flex-direction: column;
   }
 
-  .management-dashboard__primary-action {
+  .management-dashboard__header-actions {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .management-dashboard__primary-action,
+  .management-dashboard__deposit-action {
     width: 100%;
     justify-content: center;
   }
