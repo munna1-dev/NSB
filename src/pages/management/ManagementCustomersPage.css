@@ -492,3 +492,137 @@
   color: #102a43 !important;
 }
 
+
+/* NorthStarBank: final Customers console clarity fix */
+.management-customers {
+  position: relative;
+  isolation: isolate;
+  background: #f1f5f9 !important;
+  color: #243b53 !important;
+  opacity: 1 !important;
+  color-scheme: light;
+}
+
+.management-customers .management-page__header,
+.management-customers .management-card,
+.management-customers .management-customers__toolbar,
+.management-customers .management-customers__table-card,
+.management-customers .management-table-wrap {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #243b53 !important;
+  opacity: 1 !important;
+  border: 1px solid #d5dfeb;
+  box-shadow: 0 4px 16px rgba(16, 42, 67, 0.08);
+}
+
+.management-customers .management-customers__table-card,
+.management-customers .management-table-wrap {
+  overflow-x: auto;
+  border-radius: 12px;
+}
+
+.management-customers .management-table {
+  background: #ffffff !important;
+  color: #243b53 !important;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.management-customers .management-table thead th {
+  background: #e5edf6 !important;
+  color: #102a43 !important;
+  font-weight: 700;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+.management-customers .management-table tbody td {
+  background: #ffffff !important;
+  color: #243b53 !important;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.management-customers .management-table tbody tr:nth-child(even) td {
+  background: #f4f7fb !important;
+}
+
+.management-customers .management-table tbody tr:hover td {
+  background: #eaf2fc !important;
+}
+
+.management-customers h1,
+.management-customers h2,
+.management-customers h3,
+.management-customers th,
+.management-customers label {
+  color: #102a43 !important;
+  text-shadow: none !important;
+}
+
+.management-customers p,
+.management-customers td {
+  text-shadow: none !important;
+}
+
+.management-customers input,
+.management-customers select {
+  background: #ffffff !important;
+  color: #243b53 !important;
+  border: 1px solid #b8c7d8;
+  opacity: 1 !important;
+}
+
+.management-customers input::placeholder {
+  color: #718096 !important;
+  opacity: 1 !important;
+}
+
+.management-customers .management-drawer {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #243b53 !important;
+  opacity: 1 !important;
+  border-left: 1px solid #d5dfeb;
+  box-shadow: -12px 0 36px rgba(16, 42, 67, 0.18);
+}
+
+.management-customers .management-drawer__header {
+  background: #edf2f7 !important;
+  color: #102a43 !important;
+  border-bottom: 1px solid #d5dfeb;
+}
+
+.management-customers .management-drawer__body,
+.management-customers .management-drawer__section {
+  background: #ffffff !important;
+  color: #243b53 !important;
+}
+
+.management-customers .management-detail-grid > div {
+  background: #f1f5f9 !important;
+  color: #243b53 !important;
+  border: 1px solid #d5dfeb;
+  border-radius: 8px;
+}
+
+.management-customers .management-detail-grid strong {
+  color: #102a43 !important;
+}
+
+.management-customers button:focus-visible,
+.management-customers input:focus-visible,
+.management-customers select:focus-visible {
+  outline: 3px solid #4c8eda;
+  outline-offset: 2px;
+}
+
+@media (max-width: 760px) {
+  .management-customers .management-table {
+    min-width: 850px;
+  }
+
+  .management-customers .management-drawer {
+    width: 100%;
+    max-width: 100%;
+  }
+}
