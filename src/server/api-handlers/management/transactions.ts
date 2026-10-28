@@ -1,5 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { getDb } from '../../db/client.js'
+import { sendTransactionNotification } from '../../email/transaction-notifications.js'
 import { requirePermission } from '../../auth/management.js'
 
 function error(response: VercelResponse, status: number, message: string) {
@@ -31,7 +32,8 @@ export default async function handler(
       await client.query('BEGIN')
       const found = await client.query(
         `SELECT t.id, t.reference, t.transaction_type, t.status, t.amount,
-                t.account_id, a.status AS account_status, a.account_number
+                t.currency, t.description, t.account_id, a.customer_id,
+                a.status AS account_status, a.account_number
          FROM transactions t
          JOIN accounts a ON a.id = t.account_id
          WHERE t.id::text = $1
@@ -87,6 +89,22 @@ export default async function handler(
         )
       } catch (auditError) {
         console.error('Deposit review audit logging failed:', auditError)
+      }
+
+      try {
+        await sendTransactionNotification({
+          customerId: String(tx.customer_id),
+          type: 'deposit',
+          reference: String(tx.reference),
+          amount: Number(tx.amount),
+          currency: String(tx.currency),
+          status: nextStatus,
+          accountNumber: String(tx.account_number),
+          description: String(tx.description ||
+            (action === 'approve' ? 'Deposit approved' : 'Deposit rejected')),
+        })
+      } catch (emailError) {
+        console.error('Deposit review email notification failed:', emailError)
       }
 
       return response.status(200).json({ ok: true, status: nextStatus })

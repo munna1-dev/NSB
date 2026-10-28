@@ -2,6 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node'
 import { z } from 'zod'
 import { requireCustomer } from '../../auth/customer.js'
 import { getDb } from '../../db/client.js'
+import { sendTransactionNotification } from '../../email/transaction-notifications.js'
 
 const transferSchema = z.object({
   fromAccountId: z.string().uuid('Invalid source account.'),
@@ -494,6 +495,21 @@ export default async function handler(
     )
 
     await client.query('COMMIT')
+
+    try {
+      await sendTransactionNotification({
+        customerId: String(customer.id),
+        type: 'transfer',
+        reference: String(transfer.reference),
+        amount: Number(transfer.amount),
+        currency: String(transfer.currency),
+        status: String(transfer.status),
+        accountNumber: String(source.account_number),
+        description: description || `Transfer to ${destination.account_number}`,
+      })
+    } catch (emailError) {
+      console.error('Transfer email notification failed:', emailError)
+    }
 
     const newSourceBalance = balanceResult.rows[0]
 
