@@ -1,0 +1,198 @@
+/* NorthStarBank Management Customers — opaque, accessible interface */
+.management-customers {
+  color: #243b53;
+  background: #f3f6fa;
+  color-scheme: light;
+}
+
+.management-customers .management-page__header,
+.management-customers .management-customers__table-card,
+.management-customers .management-table-wrap,
+.management-customers .management-detail-grid,
+.management-customers .management-drawer__section {
+  background-color: #ffffff;
+  color: #243b53;
+  opacity: 1;
+}
+
+.management-customers .management-customers__table-card {
+  border: 1px solid #d7e0ea;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(16, 42, 67, 0.07);
+  overflow: hidden;
+}
+
+.management-customers table,
+.management-customers .management-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: #ffffff;
+  color: #243b53;
+}
+
+.management-customers thead,
+.management-customers th {
+  background: #eaf0f7;
+  color: #102a43;
+}
+
+.management-customers th {
+  padding: 14px 16px;
+  border-bottom: 2px solid #cbd5e1;
+  text-align: left;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.management-customers td {
+  padding: 14px 16px;
+  background-color: #ffffff;
+  color: #243b53;
+  border-bottom: 1px solid #e2e8f0;
+  vertical-align: middle;
+}
+
+.management-customers tbody tr:nth-child(even) td {
+  background-color: #f7f9fc;
+}
+
+.management-customers tbody tr:hover td {
+  background-color: #edf4fc;
+}
+
+.management-customers .management-table__primary,
+.management-customers .management-customers__customer-button strong {
+  color: #102a43;
+  font-weight: 700;
+}
+
+.management-customers .management-table__secondary,
+.management-customers .management-customers__customer-button span {
+  color: #526579;
+}
+
+.management-customers .management-customers__customer-button {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #102a43;
+  text-align: left;
+  cursor: pointer;
+}
+
+.management-customers .management-customers__customer-button:focus-visible,
+.management-customers button:focus-visible,
+.management-customers input:focus-visible,
+.management-customers select:focus-visible {
+  outline: 3px solid #4c8eda;
+  outline-offset: 3px;
+}
+
+.management-customers input,
+.management-customers select {
+  background-color: #ffffff;
+  color: #243b53;
+  border: 1px solid #b8c7d8;
+  border-radius: 8px;
+}
+
+.management-customers input::placeholder {
+  color: #718096;
+  opacity: 1;
+}
+
+.management-customers .management-drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(16, 42, 67, 0.62);
+  opacity: 1;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.management-customers .management-drawer {
+  background-color: #ffffff;
+  color: #243b53;
+  opacity: 1;
+  box-shadow: -12px 0 36px rgba(16, 42, 67, 0.18);
+  border-left: 1px solid #d7e0ea;
+}
+
+.management-customers .management-drawer__header {
+  background-color: #f1f5f9;
+  color: #102a43;
+  border-bottom: 1px solid #d7e0ea;
+}
+
+.management-customers .management-drawer__header h2,
+.management-customers .management-drawer__header p,
+.management-customers .management-drawer__section h3 {
+  color: #102a43;
+}
+
+.management-customers .management-drawer__body {
+  background-color: #ffffff;
+  color: #243b53;
+}
+
+.management-customers .management-detail-grid > div {
+  background-color: #f7f9fc;
+  color: #243b53;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  overflow-wrap: anywhere;
+}
+
+.management-customers .management-detail-grid span {
+  display: block;
+  margin-bottom: 5px;
+  color: #526579;
+  font-size: 12px;
+}
+
+.management-customers .management-detail-grid strong {
+  color: #102a43;
+}
+
+.management-customers .management-drawer__section {
+  border-top: 1px solid #d7e0ea;
+}
+
+.management-customers .management-drawer__section p {
+  color: #526579;
+  line-height: 1.6;
+}
+
+.management-customers .management-drawer__close {
+  background-color: #ffffff;
+  color: #102a43;
+  border: 1px solid #cbd5e1;
+}
+
+.management-customers .management-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 760px) {
+  .management-customers .management-table-wrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .management-customers table,
+  .management-customers .management-table {
+    min-width: 850px;
+  }
+
+  .management-customers .management-drawer {
+    width: 100%;
+    max-width: 100%;
+  }
+}

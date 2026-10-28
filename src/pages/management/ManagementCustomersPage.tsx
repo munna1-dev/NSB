@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import './ManagementCustomersPage.css'
 import {
   getManagementCustomers,
   updateManagementCustomerStatus,
