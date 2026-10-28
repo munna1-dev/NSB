@@ -403,3 +403,92 @@
   outline: 3px solid #3b82c4 !important;
   outline-offset: 2px;
 }
+
+/* NorthStarBank: definitive opaque Customers console */
+.management-page.management-customers,
+.management-customers {
+  background: #f1f5f9 !important;
+  background-color: #f1f5f9 !important;
+  color: #243b53 !important;
+  opacity: 1 !important;
+  color-scheme: light;
+}
+
+.management-customers .management-page__header,
+.management-customers .management-card,
+.management-customers .management-customers__toolbar,
+.management-customers .management-customers__table-card,
+.management-customers .management-table-wrap,
+.management-customers table,
+.management-customers .management-table {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  background-image: none !important;
+  color: #243b53 !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  border-color: #d5dfeb !important;
+}
+
+.management-customers .management-page__header h1,
+.management-customers .management-page__header p,
+.management-customers .management-card label,
+.management-customers th,
+.management-customers td,
+.management-customers .management-table__primary {
+  opacity: 1 !important;
+}
+
+.management-customers thead th {
+  background: #e5edf6 !important;
+  color: #102a43 !important;
+  font-weight: 700 !important;
+}
+
+.management-customers tbody td {
+  background: #ffffff !important;
+  color: #243b53 !important;
+  border-bottom: 1px solid #dce4ed !important;
+}
+
+.management-customers tbody tr:nth-child(even) td {
+  background: #f5f8fc !important;
+}
+
+.management-customers tbody tr:hover td {
+  background: #eaf2fb !important;
+}
+
+.management-customers input,
+.management-customers select {
+  background: #ffffff !important;
+  color: #243b53 !important;
+  border: 1px solid #b8c7d8 !important;
+  opacity: 1 !important;
+}
+
+.management-customers .management-drawer {
+  background: #ffffff !important;
+  color: #243b53 !important;
+  opacity: 1 !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.management-customers .management-drawer__header {
+  background: #edf2f7 !important;
+  color: #102a43 !important;
+}
+
+.management-customers .management-detail-grid > div {
+  background: #f4f7fb !important;
+  color: #243b53 !important;
+  border: 1px solid #d5dfeb !important;
+}
+
+.management-customers .management-detail-grid strong,
+.management-customers .management-drawer__section h3 {
+  color: #102a43 !important;
+}
+
