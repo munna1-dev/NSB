@@ -92,6 +92,31 @@ function todayUtc(): string {
   return new Date().toISOString().slice(0, 10)
 }
 
+function matchesPaymentRequest(
+  payment: Record<string, unknown>,
+  request: {
+    accountId: string;
+    payeeName: string;
+    payeeReference: string;
+    amount: string;
+    currency: string;
+    scheduledFor: string;
+    description: string;
+  },
+): boolean {
+  const storedDate = payment.scheduled_for instanceof Date
+    ? payment.scheduled_for.toISOString().slice(0, 10)
+    : String(payment.scheduled_for ?? '').slice(0, 10);
+
+  return String(payment.account_id) === request.accountId
+    && payment.payee_name === request.payeeName
+    && (payment.payee_reference ?? '') === request.payeeReference
+    && Number(payment.amount) === Number(request.amount)
+    && payment.currency === request.currency
+    && storedDate === request.scheduledFor
+    && (payment.description ?? '') === request.description;
+}
+
 function paymentResponse(payment: Record<string, unknown>) {
   return {
     id: payment.id,
@@ -188,6 +213,7 @@ export default async function handler(
         `
           SELECT
             id,
+            account_id,
             reference,
             status,
             payee_name,
@@ -207,12 +233,23 @@ export default async function handler(
       )
 
       if (existingPayment.rowCount === 1) {
-        await client.query('COMMIT')
+        const existing = existingPayment.rows[0]
+        if (!matchesPaymentRequest(existing, {
+          accountId, payeeName, payeeReference, amount,
+          currency, scheduledFor, description,
+        })) {
+          await client.query('ROLLBACK')
+          return res.status(409).json({
+          ok: false,
+          error: 'Idempotency key was already used for a different request.',
+        })
+        }
 
+        await client.query('COMMIT')
         return res.status(200).json({
           ok: true,
           idempotent: true,
-          payment: paymentResponse(existingPayment.rows[0]),
+          payment: paymentResponse(existing),
         })
       }
 
@@ -330,6 +367,7 @@ export default async function handler(
           )
           RETURNING
             id,
+            account_id,
             reference,
             status,
             payee_name,
@@ -446,10 +484,21 @@ export default async function handler(
           )
 
           if (existing.rowCount === 1) {
+            const payment = existing.rows[0]
+            if (!matchesPaymentRequest(payment, {
+              accountId, payeeName, payeeReference, amount,
+              currency, scheduledFor, description,
+            })) {
+              return res.status(409).json({
+                ok: false,
+                error: 'Idempotency key was already used for a different request.',
+              })
+            }
+
             return res.status(200).json({
               ok: true,
               idempotent: true,
-              payment: paymentResponse(existing.rows[0]),
+              payment: paymentResponse(payment),
             })
           }
         } catch {

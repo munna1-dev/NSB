@@ -22,6 +22,21 @@ const transferSchema = z.object({
     .uuid('Invalid idempotency key.'),
 })
 
+function matchesTransferRequest(
+  transfer: Record<string, unknown>,
+  request: {
+    fromAccountId: string;
+    toAccountId: string;
+    amount: string;
+    description: string;
+  },
+): boolean {
+  return String(transfer.from_account_id) === request.fromAccountId
+    && String(transfer.to_account_id) === request.toAccountId
+    && Number(transfer.amount) === Number(request.amount)
+    && (transfer.description ?? '') === request.description;
+}
+
 function requestIp(req: VercelRequest): string | null {
   const forwarded = req.headers['x-forwarded-for']
 
@@ -125,9 +140,18 @@ export default async function handler(
     )
 
     if (existingTransfer.rowCount === 1) {
-      await client.query('COMMIT')
-
       const existing = existingTransfer.rows[0]
+      if (!matchesTransferRequest(existing, {
+        fromAccountId, toAccountId, amount, description,
+      })) {
+        await client.query('ROLLBACK')
+        return res.status(409).json({
+          ok: false,
+          error: 'Idempotency key was already used for a different request.',
+        })
+      }
+
+      await client.query('COMMIT')
 
       return res.status(200).json({
         ok: true,
@@ -534,6 +558,14 @@ export default async function handler(
 
         if (existing.rowCount === 1) {
           const transfer = existing.rows[0]
+          if (!matchesTransferRequest(transfer, {
+            fromAccountId, toAccountId, amount, description,
+          })) {
+            return res.status(409).json({
+              ok: false,
+              error: 'Idempotency key was already used for a different request.',
+            })
+          }
 
           return res.status(200).json({
             ok: true,
