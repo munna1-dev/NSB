@@ -32,6 +32,8 @@ export function CustomerProfilePage() {
   const [imageBusy, setImageBusy] = useState(false)
   const [imageMessage, setImageMessage] = useState("")
   const [imageError, setImageError] = useState("")
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [imageLoadFailed, setImageLoadFailed] = useState(false)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
 
   useEffect(() => {
@@ -94,6 +96,8 @@ export function CustomerProfilePage() {
       return
     }
 
+    setImageLoadFailed(false)
+    setPreviewUrl(URL.createObjectURL(file))
     setImageBusy(true)
 
     try {
@@ -103,9 +107,12 @@ export function CustomerProfilePage() {
       )
 
       setCustomer(updatedCustomer)
+      setPreviewUrl(null)
+      setImageLoadFailed(false)
       window.dispatchEvent(new Event("northstar:profile-image-updated"))
       setImageMessage("Profile picture updated successfully.")
     } catch (uploadError) {
+      setPreviewUrl(null)
       setImageError(
         uploadError instanceof Error
           ? uploadError.message
@@ -128,6 +135,8 @@ export function CustomerProfilePage() {
     try {
       await removeCustomerProfileImage()
 
+      setPreviewUrl(null)
+      setImageLoadFailed(false)
       setCustomer({
         ...customer,
         profileImageUrl: null,
@@ -182,9 +191,9 @@ export function CustomerProfilePage() {
   const initials =
     `${customer.firstName.charAt(0)}${customer.lastName.charAt(0)}`.toUpperCase()
 
-  const profileImageSrc = customer.profileImageUrl
-    ? `${customer.profileImageUrl}?v=${encodeURIComponent(customer.id)}`
-    : null
+  const profileImageSrc = previewUrl ?? (customer.profileImageUrl
+    ? `${customer.profileImageUrl}?v=${encodeURIComponent(customer.id)}&t=${Date.now()}`
+    : null)
 
   return (
     <section className="customer-profile">
@@ -206,10 +215,14 @@ export function CustomerProfilePage() {
           <div className="customer-profile__identity-main">
             <div className="customer-profile__avatar-wrap">
               <div className="customer-profile__avatar">
-                {profileImageSrc ? (
+                {profileImageSrc && !imageLoadFailed ? (
                   <img
                     src={profileImageSrc}
                     alt={`${customer.firstName} ${customer.lastName}`}
+                    onError={() => {
+                      setImageLoadFailed(true)
+                      setPreviewUrl(null)
+                    }}
                   />
                 ) : (
                   initials
