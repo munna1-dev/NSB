@@ -3,25 +3,35 @@ import { Pool, type PoolClient, type QueryResult, type QueryResultRow } from 'pg
 let pool: Pool | undefined
 
 function getDatabaseUrl(): string {
-  const databaseUrl = process.env.DATABASE_URL
+  const value = process.env.DATABASE_URL
+  if (!value) throw new Error('DATABASE_URL is not configured')
+  return value
+}
 
-  if (!databaseUrl) {
-    throw new Error('DATABASE_URL is not configured')
+function getTlsConfig() {
+  const ca = process.env.DATABASE_CA_CERT?.replace(/\\n/g, '\n').trim()
+
+  if (!ca || !ca.includes('BEGIN CERTIFICATE') || !ca.includes('END CERTIFICATE')) {
+    throw new Error('DATABASE_CA_CERT is missing or is not a valid PEM certificate')
   }
 
-  return databaseUrl
+  return { ca, rejectUnauthorized: true }
 }
 
 export function getDb(): Pool {
   if (!pool) {
+    const url = new URL(getDatabaseUrl())
+
+    for (const key of ['sslmode', 'sslrootcert', 'sslcert', 'sslkey']) {
+      url.searchParams.delete(key)
+    }
+
     pool = new Pool({
-      connectionString: getDatabaseUrl(),
+      connectionString: url.toString(),
       max: 1,
-      idleTimeoutMillis: 10_000,
-      connectionTimeoutMillis: 15_000,
-      ssl: {
-        rejectUnauthorized: true,
-      },
+      idleTimeoutMillis: 10000,
+      connectionTimeoutMillis: 15000,
+      ssl: getTlsConfig(),
     })
   }
 
